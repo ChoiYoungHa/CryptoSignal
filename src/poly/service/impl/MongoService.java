@@ -8,6 +8,8 @@ import poly.service.IMongoService;
 
 import javax.annotation.Resource;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 
 @Service("MongoService")
 public class MongoService implements IMongoService {
@@ -26,7 +28,13 @@ public class MongoService implements IMongoService {
 
     // RSI 로그 저장
     @Override
-    public int insertRsiLog(RsiDTO pDTO, String ColNm) throws Exception {
-        return mongoMapper.insertRsiLog(pDTO, ColNm);
+    public int insertRsiLog(Map<String, Object> pMap, String ColNm) throws Exception {
+        return mongoMapper.insertRsiLog(pMap, ColNm);
+    }
+
+    // RSI 로그 가져오기
+    @Override
+    public List<Map<String, String>> getUserInfo(Map<String, Object> pMap, String colNm) throws Exception {
+        return mongoMapper.getRsiLog(pMap, colNm);
     }
 }

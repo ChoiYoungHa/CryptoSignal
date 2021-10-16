@@ -2,6 +2,7 @@ package poly.persistance.mongo.comm;
 
 import com.mongodb.DBObject;
 import org.apache.log4j.Logger;
+import org.bson.conversions.Bson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
@@ -47,7 +48,7 @@ public abstract class AbstractMongoDBComon {
 
                 // 컬렉션 생성 및 인덱스 생성, MongoDB에서 데이터 가져오는 방식에 맞게 인덱스는 반드시 생성하자!
                 // 데이터 양이 많지 않으면 문제되지 않으나, 최소 10만건 이상 데이터 저장시 속도가 약 10배 이상 발생함
-                mongodb.createCollection(colNm).createIndex((DBObject) Indexes.ascending(index));
+                mongodb.createCollection(colNm).createIndex(Indexes.ascending(index));
 
             } else {
 

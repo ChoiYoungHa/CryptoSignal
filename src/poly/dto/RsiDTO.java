@@ -5,6 +5,15 @@ public class RsiDTO {
     private String minute;
     private String collectTime;
     private String rsi;
+    private String symbol;
+
+    public String getSymbol() {
+        return symbol;
+    }
+
+    public void setSymbol(String symbol) {
+        this.symbol = symbol;
+    }
 
     public String getCollectTime() {
         return collectTime;

@@ -2,7 +2,9 @@
          pageEncoding="UTF-8"%>
 <%
     String SS_USER_NAME = (String)session.getAttribute("SS_USER_NAME");
+    String ss_user_id = (String) session.getAttribute("SS_USER_ID");
     System.out.println("세션 : " + SS_USER_NAME);
+    System.out.println("세션 : " + ss_user_id);
 %>
 <!DOCTYPE html>
 <html lang="en">
@@ -48,7 +50,8 @@
                 dataType : "list",
                 data : {
                     "coinList": coinList,
-                    "minute" : minute
+                    "minute" : minute,
+                    "userId" : <%=ss_user_id%>
                 }
             })
         }
@@ -854,7 +857,7 @@
                     <div class="col-md-6 grid-margin stretch-card">
                         <div class="card">
                             <div class="card-body">
-                                <h4 class="card-title">과매수 RSI 30</h4>
+                                <h4 class="card-title">과매수 RSI 70</h4>
                                 <div class="preview-list">
                                     <div class="preview-item border-bottom">
                                         <div class="preview-thumbnail">

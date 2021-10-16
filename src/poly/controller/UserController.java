@@ -134,9 +134,11 @@ public class UserController {
 			log.info("rDTO.getUserid : " + rDTO.getUser_id());
 			msg = "환영합니다!";
 
+			String user_id = rDTO.getUser_id();
+
 			// 회원 번호로 세션 올림, "ㅇㅇㅇ님, 환영합니다" 같은 문구 표시를 위해 user_name도 세션에 올림
 			// 작성자와 현재 로그인한 사용자를 구분해주기 위해 닉네임도 세션에 올림
-			session.setAttribute("SS_USER_ID", rDTO.getUser_id());
+			session.setAttribute("SS_USER_ID", user_id);
 			session.setAttribute("SS_USER_NAME", rDTO.getName());
 			session.setAttribute("SS_USER_NIC", rDTO.getNicname());
 			log.info("session.setAttribute 완료");
@@ -182,23 +184,4 @@ public class UserController {
 	}
 
 
-	// 과매도 구간 로그알림
-	@RequestMapping(value = "/rsiResponseOversold")
-	public void rsiResponse(HttpServletRequest request, ModelMap model) {
-		String symbol = CmmUtil.nvl(request.getParameter("symbol"));
-		String minute = CmmUtil.nvl(request.getParameter("minute"));
-
-		// 파이썬 서버로부터 rsi 받고 세션에서 회원번호받고 컬렉션저장데이터는 년월일시분초 단위
-		// 그냥 컬렉션은 년월일만
-
-		log.info("symbol :" + symbol);
-		log.info("minute : " + minute);
-
-		String result = symbol + "코인은" + minute + "분봉기준" + "RSI 30 과매도 구간입니다.";
-
-		// mongo 저장하고 프론트에서 5초마다 ajax로 몽고디비에 저장된 로그 요청
-
-
-
-	}
 }

@@ -1,9 +1,7 @@
 package poly.persistance.mongo.impl;
 
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
+import java.util.function.Consumer;
 
 import com.mongodb.BasicDBObject;
 import config.Mapper;
@@ -45,8 +43,8 @@ public class MongoMapper extends AbstractMongoDBComon implements IMongoMapper {
         }
 
         // 복합키 생성 및 인덱스 생성 (복합키로 수집시간, 유저번호)
-        mongodb.createCollection(colNm).createIndex(new BasicDBObject("collectTime",1).append("userId",1)
-        , "rsiIdx");
+//        mongodb.createCollection(colNm).createIndex(new BasicDBObject("collectTime",1).append("userId",1)
+//        , "rsiIdx");
         log.info("createCollection End!");
 
         return true;
@@ -54,51 +52,66 @@ public class MongoMapper extends AbstractMongoDBComon implements IMongoMapper {
 
     // RSI 저장
     @Override
-    public int insertRsiLog(RsiDTO pDTO, String colNm) throws Exception {
+    public int insertRsiLog(Map<String, Object> pMap, String colNm) throws Exception {
         log.info(this.getClass().getName() + ".insertRsiLog Start!");
 
         int res = 0;
 
-        if (pDTO == null) {
-            pDTO = new RsiDTO();
+        if (pMap == null) {
+            pMap = new HashMap();
         }
 
+        String[] it = {"collectTime", "userId"};
+
         // 데이터를 저장할 컬렉션 생성
-        super.createCollection(colNm, "collectTime");
+        super.createCollection(colNm, it);
 
         // 저장할 컬렉션 객체 생성
-        MongoCollection<Document> col = (MongoCollection<Document>) mongodb.getCollection(colNm);
+        MongoCollection<Document> collection = mongodb.getCollection(colNm);
 
-        String collectTime = CmmUtil.nvl(pDTO.getCollectTime());
-        String minute = CmmUtil.nvl(pDTO.getMinute());
-        String userId = CmmUtil.nvl(pDTO.getUser_id());
-        String rsi = CmmUtil.nvl(pDTO.getRsi());
-
-        log.info("collectTime : " + collectTime);
-        log.info("minute : " + minute);
-        log.info("userId : " + userId);
-        log.info("rsi : " + rsi);
-
-        // 2.xx 버전의 MongoDB 저장은 Document 단위로 구성됨
-        Document doc = new Document();
-
-        doc.append("collectTime", collectTime);
-        doc.append("minute", minute);
-        doc.append("userId", userId);
-        doc.append("rsi", rsi);
-
-        // 레코드 한개씩 저장하기
-        col.insertOne(doc);
-
-        doc = null;
-
-        col = null;
+        collection.insertOne(new Document(pMap));
 
         res = 1;
 
         log.info(this.getClass().getName() + ".insertRsiLog End!");
 
         return res;
+    }
+
+    @Override
+    public List<Map<String, String>> getRsiLog(Map<String, Object> pMap, String colNm) {
+        log.info(this.getClass().getName() + "getUserInfo Start!");
+
+        List<Map<String, String>> rList = new LinkedList<>();
+
+        MongoCollection<Document> collection = mongodb.getCollection(colNm);
+
+        Document query = new Document(pMap);
+
+        Consumer<Document> processBlock = document -> {
+
+            Map<String, String> rMap = new HashMap<>();
+
+            String site_name = document.getString("site_name");
+            String site_address = document.getString("site_address");
+            String site_id = document.getString("site_id");
+            String site_pw = document.getString("site_pw");
+
+            rMap.put("site_name", site_name);
+            rMap.put("site_address", site_address);
+            rMap.put("site_id", site_id);
+            rMap.put("site_pw", site_pw);
+
+            rList.add(rMap);
+
+            rMap = null;
+        };
+
+        collection.find(query).forEach(processBlock);
+
+        log.info(this.getClass().getName() + "getUserInfo End!");
+
+        return rList;
     }
 
 

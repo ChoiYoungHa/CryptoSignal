@@ -4,6 +4,7 @@ import poly.dto.RsiDTO;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 public interface IMongoMapper {
 
@@ -18,7 +19,13 @@ public interface IMongoMapper {
      * @param colNm 저장할 컬렉션 이름
      * @return 저장 결과
      */
-    public int insertRsiLog(RsiDTO pDTO, String colNm) throws Exception;
+    public int insertRsiLog(Map<String, Object> pMap, String colNm) throws Exception;
+
+    // RSI 가져오기
+    public List<Map<String, String>> getRsiLog(Map<String, Object> pMap, String colNm);
+
+
+
 
 
 }

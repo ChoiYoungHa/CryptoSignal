@@ -22,11 +22,80 @@
     <!-- inject:css -->
     <!-- endinject -->
     <!-- Layout styles -->
-    <link rel="stylesheet" href="/resource/assets/css/classic-horizontal/style.css">
+    <link rel="stylesheet" href="/resource/assets/css/classic-horizontal/style.css?ver=1">
     <!-- End layout styles -->
     <link rel="shortcut icon" href="/resource/assets/images/favicon.png" />
+    <!-- Sweet Alert -->
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+    <!-- window javascript 알림 테스트 start -->
+    <script type="text/javascript">
+
+        document.addEventListener("DOMContentLoaded", function() {
+            /* 로딩될 때, notification 기능에 대한 허용 여부 확인 */
+            if (window.Notification) {
+                Notification.requestPermission();
+            }
+        })
+
+        // /* ex) 2초 후 알람 등 */
+        // function calculate() {
+        //     setTimeout(function () {
+        //         notify();
+        //     }, 2000);
+        // }
+
+        function notify() {
+
+            if (Notification.permission !== 'granted') {
+                alert('notification is disabled');
+            }
+            else {
+                var notification = new Notification('Notification title', {
+                    icon: 'http://cdn.sstatic.net/stackexchange/img/logos/so/so-icon.png',
+                    body: 'Notification text',
+                });
+
+
+                /* 해당 알람을 클릭할 경우 upbit 홈페이지로 이동 */
+                notification.onclick = function () {
+                    window.open('http://upbit.com/exchange?code=CRIX.UPBIT.KRW-EOS');
+                };
+            }
+        }
+    </script>
+    <!-- window javascript 알림 테스트 end -->
 
     <script>
+
+        function loginChk() {
+            /* 로그인한 경우에만 rsiPlay() 함수 실행 */
+            if ("<%=SS_USER_NAME%>" != "null") {
+                console.log("로그인중");
+                document.getElementById("rsiexecute").style.display = "none";
+                document.getElementById("rsistop").style.display = "inline-block";
+                rsiPlay()
+                /* 로그인 안 한 사용자는 로그인 창으로 이동 */
+            } else {
+                console.log("로그인 안 됨");
+
+                Swal.fire({
+                    title: '로그인만 회원만 이용 가능합니다. ',
+                    icon: 'warning',
+                    showCancelButton : true,
+                    confirmButtonText : "네! 로그인",
+                    cancelButtonText : "아니오, 그냥 볼래요"
+                }).then(val => {
+                    if (val.isConfirmed) {
+                        location.href = "/loginPage.do";
+                    } else if (val.isCancled) {
+                        return false;
+                    }
+                });
+            }
+        }
+
+        /* RSI 30 알림 기능 START (로그인한 경우에만) */
         function rsiPlay(){
             let obj_length = document.getElementsByName("coin").length;
             let coinList = [];
@@ -42,7 +111,8 @@
             console.log(coinList[0]);
             console.log(minute)
 
-            $.ajax({
+            /* RSI를 조회하기 위한 ajax 요청 */
+            req = $.ajax({
                 url : "http://127.0.0.1:5000/rsiAram",
                 type : "post",
                 dataType : "list",
@@ -51,8 +121,38 @@
                     "minute" : minute
                 }
             })
+
+            var repeat = setInterval(function() {
+
+                /* 중지를 눌렀다면(value=stop) ajax 요청 중지 + 실행 종료되었으므로 setInterval 종료 */
+                if (document.getElementById("isstop").value === "stop") {
+                    console.log("stop!");
+                    document.getElementById("isstop").value = "default";
+                    console.log("changed");
+                    /* 요청했던 ajax 중지(테스트 해봐야 암) */
+                    req.abort();
+                    console.log("req aborted");
+                    /* 실행 중에 중지버튼을 누르면 ajax 취소(테스트 예정) + 더이상 setInterval 이 돌지 않게 종료 */
+                    clearInterval(repeat);
+                } else {
+                    console.log("요청 실행 중(nonstop)");
+                }
+            }, 1000)
         }
+
+        /* 실행중인 RSI 30 알람체크 기능 중지 */
+        function rsiStop() {
+            document.getElementById("rsiexecute").style.display = "inline-block";
+            document.getElementById("rsistop").style.display = "none";
+            document.getElementById("isstop").value = "stop";
+        }
+
+        // $(document).ajaxStart(function () {
+        //     console.log("ajstart");
+        // });
+
     </script>
+
 </head>
 <body>
 <div class="container-scroller">
@@ -62,7 +162,7 @@
             <div class="container">
                 <div class="text-center navbar-brand-wrapper d-flex align-items-center justify-content-center">
                     <a class="navbar-brand brand-logo mr-2" href="/">Crypto Signal</a>
-                    <a class="navbar-brand brand-logo-mini" href="index.html"><img src="/resource/assets/images/logo-mini.svg" alt="logo" /></a>
+                    <a class="navbar-brand brand-logo-mini" href="/loginPage.do">Crypto Signal</a>
                 </div>
                 <div class="navbar-menu-wrapper d-flex align-items-center justify-content-end">
                     <ul class="navbar-nav w-100">
@@ -118,11 +218,16 @@
                                 <div class="row my-4">
                                     <div class="col-lg-7 mx-auto text-center">
 
-                                        <button type="button" class="btn btn-success btn-fw fa-play mb-2" onclick="rsiPlay()"><i class="fa-play">실행</i></button>
+                                        <!-- RSI 알림 실행/중지 버튼 -->
+                                        <button type="button" id="rsiexecute" class="btn btn-success btn-fw fa-play mb-2" onclick="loginChk()">실행</button>
+                                        <button type="button" id="rsistop" class="btn btn-warning btn-fw fa-play mb-2" onclick="rsiStop()" style="display: none;">중지</button>
 
+                                        <input type="hidden" id="isstop" value="default"/>
+
+                                        <!-- RSI 알림 받을 분봉 선택 -->
                                         <select class="dropdown-header bg-primary rounded-bottom rounded-top m-auto" id="unit-select">
                                             <option class="dropdown-item" value="" selected hidden>분봉 선택</option>
-                                            <option class="dropdown-item mdi-cursor-pointer" value="1">1분봉</option>
+                                            <option class="dropdown-item" value="1">1분봉</option>
                                             <option class="dropdown-item" value="3">3분봉</option>
                                             <option class="dropdown-item" value="5">5분봉</option>
                                             <option class="dropdown-item" value="10">10분봉</option>
@@ -131,6 +236,12 @@
                                             <option class="dropdown-item" value="60">60분봉</option>
                                             <option class="dropdown-item" value="240">240분봉</option>
                                         </select>
+
+                                        <br/>
+
+
+                                        <!-- window javascript 알림 테스트 버튼(현재 setTimeout 5초) -->
+                                        <button class="btn btn-behance" onclick="notify()">알림 테스트</button>
 
 
                                     </div>
@@ -161,7 +272,7 @@
                         </div>
                     </div>
 
-                    <!-- ############################ Coin List ############################ -->
+                    <!-- ############################ RSI 알림 받을 Coin List ############################ -->
                     <div class="col-md-8 grid-margin stretch-card">
                         <div class="card">
                             <div class="card-body" style="height: 450px; overflow: auto;">

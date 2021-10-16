@@ -9846,7 +9846,7 @@ input[type="button"].btn-block {
   padding: 0.25rem 1.5rem;
   clear: both;
   font-weight: 400;
-  color: #c2c2c2;
+  color: white;
   text-align: inherit;
   white-space: nowrap;
   background-color: transparent;
@@ -9872,13 +9872,13 @@ input[type="button"].btn-block {
   padding: 0.5rem 1.5rem;
   margin-bottom: 0;
   font-size: 0.875rem;
-  color: #c2c2c2;
+  color: white;
   white-space: nowrap; }
 
 .dropdown-item-text {
   display: block;
   padding: 0.25rem 1.5rem;
-  color: #c2c2c2; }
+  color: white; }
 
 .btn-group, .fc .fc-button-group,
 .btn-group-vertical {
@@ -17655,8 +17655,10 @@ div.tagsinput {
         background: #47a447;
         -webkit-transform-origin: 50% 250%;
         transform-origin: 50% 250%;
-        -webkit-animation: rota 1.13s linear infinite, opa 3.67s ease-in-out infinite alternate;
-        animation: rota 1.13s linear infinite, opa 3.67s ease-in-out infinite alternate; }
+        -webkit-animation: rota 1.13s linear infinite,
+ opa 3.67s ease-in-out infinite alternate;
+        animation: rota 1.13s linear infinite,
+ opa 3.67s ease-in-out infinite alternate; }
       #pgloading .bokeh li:nth-child(2) {
         top: 50%;
         right: 0;
@@ -17664,8 +17666,10 @@ div.tagsinput {
         background: #d53f3a;
         -webkit-transform-origin: -150% 50%;
         transform-origin: -150% 50%;
-        -webkit-animation: rota 1.86s linear infinite, opa 4.29s ease-in-out infinite alternate;
-        animation: rota 1.86s linear infinite, opa 4.29s ease-in-out infinite alternate; }
+        -webkit-animation: rota 1.86s linear infinite,
+ opa 4.29s ease-in-out infinite alternate;
+        animation: rota 1.86s linear infinite,
+ opa 4.29s ease-in-out infinite alternate; }
       #pgloading .bokeh li:nth-child(3) {
         left: 50%;
         bottom: 0;
@@ -17673,8 +17677,10 @@ div.tagsinput {
         background: #ed9c28;
         -webkit-transform-origin: 50% -150%;
         transform-origin: 50% -150%;
-        -webkit-animation: rota 1.45s linear infinite, opa 5.12s ease-in-out infinite alternate;
-        animation: rota 1.45s linear infinite, opa 5.12s ease-in-out infinite alternate; }
+        -webkit-animation: rota 1.45s linear infinite,
+ opa 5.12s ease-in-out infinite alternate;
+        animation: rota 1.45s linear infinite,
+ opa 5.12s ease-in-out infinite alternate; }
       #pgloading .bokeh li:nth-child(4) {
         top: 50%;
         left: 0;
@@ -17682,8 +17688,10 @@ div.tagsinput {
         background: #0088cc;
         -webkit-transform-origin: 250% 50%;
         transform-origin: 250% 50%;
-        -webkit-animation: rota 1.72s linear infinite, opa 5.25s ease-in-out infinite alternate;
-        animation: rota 1.72s linear infinite, opa 5.25s ease-in-out infinite alternate; }
+        -webkit-animation: rota 1.72s linear infinite,
+ opa 5.25s ease-in-out infinite alternate;
+        animation: rota 1.72s linear infinite,
+ opa 5.25s ease-in-out infinite alternate; }
 
 @-webkit-keyframes rota {
   from { }
@@ -17871,16 +17879,37 @@ div.tagsinput {
   background: #ed9c28;
   color: #ed9c28;
   margin: 80px auto;
-  box-shadow: 15px 15px  0 0, -15px -15px  0 0, 15px -15px  0 0, -15px 15px  0 0, 0 15px  0 0, 15px 0  0 0, -15px 0  0 0, 0 -15px 0 0;
+  box-shadow: 15px 15px  0 0,
+ -15px -15px  0 0,
+ 15px -15px  0 0,
+ -15px 15px  0 0,
+ 0 15px  0 0,
+ 15px 0  0 0,
+ -15px 0  0 0,
+ 0 -15px 0 0;
   animation: anim 2s linear infinite; }
 
 @keyframes anim {
   0% {
     -webkit-filter: hue-rotate(0deg); }
   50% {
-    box-shadow: 20px 20px  0 0, -20px -20px  0 0, 20px -20px  0 0, -20px 20px  0 0, 0 10px  0 0, 10px 0  0 0, -10px 0  0 0, 0 -10px 0 0; }
+    box-shadow: 20px 20px  0 0,
+ -20px -20px  0 0,
+ 20px -20px  0 0,
+ -20px 20px  0 0,
+ 0 10px  0 0,
+ 10px 0  0 0,
+ -10px 0  0 0,
+ 0 -10px 0 0; }
   75% {
-    box-shadow: 20px 20px  0 0, -20px -20px  0 0, 20px -20px  0 0, -20px 20px  0 0, 0 10px  0 0, 10px 0  0 0, -10px 0  0 0, 0 -10px 0 0; }
+    box-shadow: 20px 20px  0 0,
+ -20px -20px  0 0,
+ 20px -20px  0 0,
+ -20px 20px  0 0,
+ 0 10px  0 0,
+ 10px 0  0 0,
+ -10px 0  0 0,
+ 0 -10px 0 0; }
   100% {
     transform: rotate(360deg);
     -webkit-filter: hue-rotate(360deg); } }

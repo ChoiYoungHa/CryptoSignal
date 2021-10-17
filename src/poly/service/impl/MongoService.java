@@ -8,6 +8,7 @@ import poly.service.IMongoService;
 
 import javax.annotation.Resource;
 import java.time.LocalDate;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -34,7 +35,7 @@ public class MongoService implements IMongoService {
 
     // RSI 로그 가져오기
     @Override
-    public List<Map<String, String>> getUserInfo(Map<String, Object> pMap, String colNm) throws Exception {
-        return mongoMapper.getRsiLog(pMap, colNm);
+    public LinkedList<Map<String, String>> getRsiLog(String colNm, String collectTime, String userId, String minute) throws Exception {
+        return mongoMapper.getRsiLog(colNm, collectTime, userId, minute);
     }
 }

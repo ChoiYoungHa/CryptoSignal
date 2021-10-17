@@ -4,6 +4,9 @@ import java.util.*;
 import java.util.function.Consumer;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.Cursor;
+import com.mongodb.DBCursor;
+import com.mongodb.client.MongoCursor;
 import config.Mapper;
 import org.apache.log4j.Logger;
 import org.bson.Document;
@@ -78,38 +81,63 @@ public class MongoMapper extends AbstractMongoDBComon implements IMongoMapper {
         return res;
     }
 
+    // RSI 데이터 가져오기
     @Override
-    public List<Map<String, String>> getRsiLog(Map<String, Object> pMap, String colNm) {
-        log.info(this.getClass().getName() + "getUserInfo Start!");
+    public LinkedList<Map<String, String>> getRsiLog(String colNm, String collectTime, String userId, String minute) {
+        log.info(this.getClass().getName() + "getRsiLog Start!");
 
-        List<Map<String, String>> rList = new LinkedList<>();
+        LinkedList<Map<String, String>> rList = new LinkedList<Map<String, String>>();
+        MongoCollection<Document> col = mongodb.getCollection(colNm);
+        
+        BasicDBObject whereQuery = new BasicDBObject();
 
-        MongoCollection<Document> collection = mongodb.getCollection(colNm);
+        // 테스트 버튼으로 테스트
+        whereQuery.put("collectTime", new BasicDBObject()
+                .append("$gt", collectTime)
+        );
 
-        Document query = new Document(pMap);
+        
+        whereQuery.put("userId", userId);
+        whereQuery.put("minute", minute);
 
-        Consumer<Document> processBlock = document -> {
+        FindIterable<Document> rs = col.find(whereQuery);
 
-            Map<String, String> rMap = new HashMap<>();
+        Iterator<Document> cursor = rs.iterator();
 
-            String site_name = document.getString("site_name");
-            String site_address = document.getString("site_address");
-            String site_id = document.getString("site_id");
-            String site_pw = document.getString("site_pw");
+        while (cursor.hasNext()) {
+            Document doc = cursor.next();
 
-            rMap.put("site_name", site_name);
-            rMap.put("site_address", site_address);
-            rMap.put("site_id", site_id);
-            rMap.put("site_pw", site_pw);
+            if (doc == null) {
+                doc = new Document();
+            }
 
+            String symbol = CmmUtil.nvl(doc.getString("symbol"));
+            String rsi = CmmUtil.nvl(doc.getString("rsi"));
+            String getMinute = CmmUtil.nvl(doc.getString("minute"));
+            String getCollectTime = CmmUtil.nvl(doc.getString("collectTime"));
+
+            log.info("symbol : " + symbol);
+            log.info("rsi : " + rsi);
+            log.info("getMinute : " + getMinute);
+            log.info("getCollectTime : " + getCollectTime);
+
+            Map<String, String> rMap = new LinkedHashMap<String, String>();
+
+            rMap.put("symbol", symbol);
+            rMap.put("rsi", rsi);
+            rMap.put("getMinute", getMinute);
+            rMap.put("getCollectTime", getCollectTime);
             rList.add(rMap);
 
             rMap = null;
-        };
+            doc = null;
+        }
 
-        collection.find(query).forEach(processBlock);
+        cursor = null;
+        rs = null;
+        col = null;
 
-        log.info(this.getClass().getName() + "getUserInfo End!");
+        log.info(this.getClass().getName() + "getRsiLog End!");
 
         return rList;
     }

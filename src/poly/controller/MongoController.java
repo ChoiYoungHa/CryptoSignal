@@ -14,9 +14,7 @@ import poly.util.DateUtil;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Controller
 public class MongoController {
@@ -40,7 +38,7 @@ public class MongoController {
         return "success";
     }
 
-    // 전체 로그저장
+    // flask 서버로부터 받은 전체 로그 mongoDB 저장
     @RequestMapping(value = "/rsiLogSave")
     public void rsiResponse(HttpServletRequest request) throws Exception {
         String symbol = CmmUtil.nvl(request.getParameter("symbol"));
@@ -49,9 +47,6 @@ public class MongoController {
         String rsi = CmmUtil.nvl(request.getParameter("rsi"));
 
         String collectTime = DateUtil.getDateTime("yyyyMMddHHmmss");
-
-        // 파이썬 서버로부터 rsi 받고 세션에서 회원번호받고 컬렉션저장데이터는 년월일시분초 단위
-        // 그냥 컬렉션은 년월일만
 
         log.info("symbol :" + symbol);
         log.info("minute : " + minute);
@@ -71,28 +66,49 @@ public class MongoController {
         String date = DateUtil.getDateTime("yyyy-MM-dd");
         int res = mongoService.insertRsiLog(pMap, date);
         log.info("저장 성공 1, 아님 0 : " + res);
-
-        String result = symbol + "코인은" + minute + "분봉기준" + "RSI 30 과매도 구간입니다.";
-
-        // mongo 저장하고 프론트에서 5초마다 ajax로 몽고디비에 저장된 로그 요청
     }
 
 
+    // RSI 로그 데이터 요청
+    @RequestMapping("getRsiLog")
+    @ResponseBody
+    public List<Map<String, String>> getRsiLog(HttpServletRequest request) throws Exception {
+        log.info("getRsiLog Start!");
 
+        // 데이터를 가져올 컬렉션
+        String colNm = DateUtil.getDateTime("yyyy-MM-dd");
 
+        // 요청한 시간 이후에 데이터만 요청
+        String collectTime = DateUtil.getDateTime("yyyyMMddHHmmss");
 
+        int requestTime = Integer.parseInt(collectTime) - 30;
+        String strRequestTime = String.valueOf(requestTime);
 
+        String userId = CmmUtil.nvl(request.getParameter("userId"));
+        String minute = CmmUtil.nvl(request.getParameter("minute"));
 
+        log.info("colNm : " + colNm);
+        log.info("strRequestTime : " + strRequestTime);
+        log.info("userId : " + userId);
+        log.info("minute : " + minute);
 
+        LinkedList<Map<String, String>> rList = mongoService.getRsiLog(colNm, strRequestTime, userId, minute);
 
+        if (rList == null) {
+            rList = new LinkedList<>();
+        }
 
+        Iterator<Map<String, String>> it = rList.iterator();
 
+        while (it.hasNext()) {
+            Map<String, String> rMap = it.next();
+            log.info("rMap.getSymbol : " + rMap.get("symbol"));
+            log.info("rMap.getRsi : " + rMap.get("rsi"));
+            log.info("rMap.getMinute : " + rMap.get("getMinute"));
+            log.info("rMap.getCollectTime : " + rMap.get("getCollectTime"));
+        }
+        log.info("getRsiLog End!");
 
-
-
-
-
-
-
-
+        return rList;
+    }
 }

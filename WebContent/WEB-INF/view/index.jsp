@@ -35,6 +35,11 @@
 
         document.addEventListener("DOMContentLoaded", function() {
             /* 로딩될 때, notification 기능에 대한 허용 여부 확인 */
+
+            if (!("Notification" in window)) {
+                alert("지원하지 않는 브라우저입니다.");
+            }
+
             if (window.Notification) {
                 Notification.requestPermission();
             }
@@ -49,27 +54,29 @@
 
         function notify() {
 
-            if (Notification.permission !== 'granted') {
-                alert('notification is disabled');
-            }
-            else {
+            console.log("Notification permission : " + Notification.permission);
+
+            if (Notification.permission == 'granted') {
+                console.log("granted(알림 요청)");
                 var notification = new Notification('Notification title', {
                     icon: 'http://cdn.sstatic.net/stackexchange/img/logos/so/so-icon.png',
                     body: 'Notification text',
                 });
 
+                console.log("알림 요청 끝");
 
                 /* 해당 알람을 클릭할 경우 upbit 홈페이지로 이동 */
                 notification.onclick = function () {
                     window.open('http://upbit.com/exchange?code=CRIX.UPBIT.KRW-EOS');
                 };
+            } else {
+                alert("Notification not granted(크롬 설정에서 알림을 허용해 주세요)");
             }
         }
     </script>
     <!-- window javascript 알림 테스트 end -->
 
     <script>
-
         function loginChk() {
             /* 로그인한 경우에만 rsiPlay() 함수 실행 */
             if ("<%=SS_USER_NAME%>" != "null") {
@@ -97,7 +104,48 @@
             }
         }
 
-        /* RSI 30 알림 기능 START (로그인한 경우에만) */
+
+
+
+
+
+        // RSI 로그 데이터 요청
+        function getRsiLog(minute){
+            $.ajax({
+                url : "http://localhost:8080/getRsiLog.do",
+                type : "post",
+                dataType : "json",
+                data : {
+                    "userId" : <%=ss_user_id%>,
+                    "minute" : minute
+                },
+                success: function (data) {
+                    console.log(JSON.stringify(data))
+                }
+            })
+        }
+
+        // RSI 로그 10초마다 요청
+        function reqTimeLog(minute){
+            var repeat = setInterval(function() {
+                /* 중지를 눌렀다면(value=stop) ajax 요청 중지 + 실행 종료되었으므로 setInterval 종료 */
+                if (document.getElementById("isstop").value === "stop") {
+                    // console.log("stop!");
+                    document.getElementById("isstop").value = "default";
+
+                    /* 실행 중에 중지버튼을 누르면 ajax 취소(테스트 예정) + 더이상 setInterval 이 돌지 않게 종료 */
+                    clearInterval(repeat);
+
+                    // else (실행 버튼 누르고 실행중일 때)
+                } else {
+                    // 여기에 10초에 한번씩 요청하는 ajax 코드 넣으면 됨(실행중인 이상 계속 요청)
+                    getRsiLog(minute)
+                }
+            }, 6000)
+        }
+
+
+        /* RSI 30 알림 기능 START (수집, 데이터 요청 ajax 실행)(로그인한 경우에만) */
         function rsiPlay(){
             let obj_length = document.getElementsByName("coin").length;
             let coinList = [];
@@ -109,13 +157,14 @@
             }
 
             let minute = $("#unit-select option:selected").val();
+            reqTimeLog(minute)
 
             console.log(coinList[0]);
             console.log(minute)
 
             /* RSI를 조회하기 위한 ajax 요청 */
             req = $.ajax({
-                url : "http://127.0.0.1:5000/rsiAram",
+                url : "http://192.168.0.8:5000/rsiAram",
                 type : "post",
                 dataType : "list",
                 data : {
@@ -126,7 +175,6 @@
             })
 
             var repeat = setInterval(function() {
-
                 /* 중지를 눌렀다면(value=stop) ajax 요청 중지 + 실행 종료되었으므로 setInterval 종료 */
                 if (document.getElementById("isstop").value === "stop") {
                     console.log("stop!");
@@ -153,6 +201,9 @@
         // $(document).ajaxStart(function () {
         //     console.log("ajstart");
         // });
+
+
+
 
     </script>
 
@@ -239,14 +290,11 @@
                                             <option class="dropdown-item" value="60">60분봉</option>
                                             <option class="dropdown-item" value="240">240분봉</option>
                                         </select>
-
                                         <br/>
-
 
                                         <!-- window javascript 알림 테스트 버튼(현재 setTimeout 5초) -->
                                         <button class="btn btn-behance" onclick="notify()">알림 테스트</button>
-
-
+                                        <button class="btn btn-behance" onclick="getRsiLog()">데이터 GET 테스트</button>
                                     </div>
                                 </div>
                                 <div class="row mt-3">
@@ -924,6 +972,7 @@
                                 <div class="d-flex flex-row p-3">
                                     <div class="align-self-top">
                                         <h4 class="card-title">로그 기록</h4>
+                                        <div id="totalLog"></div>
                                         <%--                                        <h3 class="mb-0">2800</h3>--%>
                                     </div>
                                     <div class="align-self-center flex-grow text-right">

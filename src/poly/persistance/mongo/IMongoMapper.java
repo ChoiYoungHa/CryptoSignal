@@ -3,6 +3,7 @@ package poly.persistance.mongo;
 import poly.dto.RsiDTO;
 
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -22,7 +23,7 @@ public interface IMongoMapper {
     public int insertRsiLog(Map<String, Object> pMap, String colNm) throws Exception;
 
     // RSI 가져오기
-    public List<Map<String, String>> getRsiLog(Map<String, Object> pMap, String colNm);
+    public LinkedList<Map<String, String>> getRsiLog(String colNm, String collectTime, String userId, String minute);
 
 
 

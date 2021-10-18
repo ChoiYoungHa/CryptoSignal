@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="war" build-on-make="true" name="SpringForOracle:war2">
+    <output-path>$PROJECT_DIR$/out/artifacts/SpringForOracle_war2</output-path>
+    <root id="archive" name="SpringForOracle_war.war">
+      <element id="artifact" artifact-name="SpringForOracle:war exploded" />
+    </root>
+  </artifact>
+</component>

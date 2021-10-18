@@ -105,19 +105,44 @@
         }
 
 
+        // yyyyMMddhhmmss 현재시간 구하는 함수
+        function getCurrentDate()
+        {
+            var date = new Date();
+            var year = date.getFullYear().toString();
+
+            var month = date.getMonth() + 1;
+            month = month < 10 ? '0' + month.toString() : month.toString();
+
+            var day = date.getDate();
+            day = day < 10 ? '0' + day.toString() : day.toString();
+
+            var hour = date.getHours();
+            hour = hour < 10 ? '0' + hour.toString() : hour.toString();
+
+            var minites = date.getMinutes();
+            minites = minites < 10 ? '0' + minites.toString() : minites.toString();
+
+            var seconds = date.getSeconds();
+            seconds = seconds < 10 ? '0' + seconds.toString() : seconds.toString();
+
+            return year + month + day + hour + minites + seconds;
+        }
+
 
 
 
 
         // RSI 로그 데이터 요청
-        function getRsiLog(minute){
+        function getRsiLog(minute, currentDate){
             $.ajax({
                 url : "http://localhost:8080/getRsiLog.do",
                 type : "post",
                 dataType : "json",
                 data : {
                     "userId" : <%=ss_user_id%>,
-                    "minute" : minute
+                    "minute" : minute,
+                    "currentDate" : currentDate
                 },
                 success: function (data) {
                     console.log(JSON.stringify(data))
@@ -126,7 +151,7 @@
         }
 
         // RSI 로그 10초마다 요청
-        function reqTimeLog(minute){
+        function reqTimeLog(minute, currentDate){
             var repeat = setInterval(function() {
                 /* 중지를 눌렀다면(value=stop) ajax 요청 중지 + 실행 종료되었으므로 setInterval 종료 */
                 if (document.getElementById("isstop").value === "stop") {
@@ -139,13 +164,14 @@
                     // else (실행 버튼 누르고 실행중일 때)
                 } else {
                     // 여기에 10초에 한번씩 요청하는 ajax 코드 넣으면 됨(실행중인 이상 계속 요청)
-                    getRsiLog(minute)
+                    getRsiLog(minute, currentDate)
                 }
             }, 6000)
         }
 
 
         /* RSI 30 알림 기능 START (수집, 데이터 요청 ajax 실행)(로그인한 경우에만) */
+        // 내가 클릭한 시점으로 데이터저장
         function rsiPlay(){
             let obj_length = document.getElementsByName("coin").length;
             let coinList = [];
@@ -155,22 +181,24 @@
                     coinList.push(document.getElementsByName("coin")[i].value);
                 }
             }
-
+            let currentDate = getCurrentDate();
+            console.log("currentData : " + currentDate)
             let minute = $("#unit-select option:selected").val();
-            reqTimeLog(minute)
+            reqTimeLog(minute,currentDate)
 
             console.log(coinList[0]);
             console.log(minute)
 
-            /* RSI를 조회하기 위한 ajax 요청 */
+            /* RSI를 수집하기 위한 ajax 요청 */
             req = $.ajax({
-                url : "http://192.168.0.8:5000/rsiAram",
+                url : "http://192.168.0.4:5000/rsiAram",
                 type : "post",
                 dataType : "list",
                 data : {
                     "coinList": coinList,
                     "minute" : minute,
-                    "userId" : <%=ss_user_id%>
+                    "userId" : <%=ss_user_id%>,
+                    "collectTime" : currentDate
                 }
             })
 

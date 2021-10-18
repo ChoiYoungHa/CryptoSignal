@@ -92,15 +92,16 @@ public class MongoMapper extends AbstractMongoDBComon implements IMongoMapper {
         BasicDBObject whereQuery = new BasicDBObject();
 
         // 테스트 버튼으로 테스트
-        whereQuery.put("collectTime", new BasicDBObject()
-                .append("$gt", collectTime)
-        );
+//        whereQuery.put("collectTime", new BasicDBObject()
+//                .append("$gt", collectTime)
+//        );
 
-        
         whereQuery.put("userId", userId);
+        whereQuery.put("collectTime", collectTime);
         whereQuery.put("minute", minute);
 
-        FindIterable<Document> rs = col.find(whereQuery);
+
+        FindIterable<Document> rs = col.find(whereQuery).sort(new BasicDBObject("_id",-1)).limit(3);
 
         Iterator<Document> cursor = rs.iterator();
 

@@ -14,6 +14,8 @@ import poly.util.DateUtil;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Controller
@@ -45,8 +47,9 @@ public class MongoController {
         String minute = CmmUtil.nvl(request.getParameter("minute"));
         String userId = CmmUtil.nvl(request.getParameter("userId"));
         String rsi = CmmUtil.nvl(request.getParameter("rsi"));
+        String collectTime = CmmUtil.nvl(request.getParameter("collectTime"));
 
-        String collectTime = DateUtil.getDateTime("yyyyMMddHHmmss");
+ //       String collectTime = DateUtil.getDateTime("yyyyMMddHHmmss");
 
         log.info("symbol :" + symbol);
         log.info("minute : " + minute);
@@ -77,22 +80,23 @@ public class MongoController {
 
         // 데이터를 가져올 컬렉션
         String colNm = DateUtil.getDateTime("yyyy-MM-dd");
+        String collectTime = CmmUtil.nvl(request.getParameter("currentDate"));
 
         // 요청한 시간 이후에 데이터만 요청
-        String collectTime = DateUtil.getDateTime("yyyyMMddHHmmss");
-
-        int requestTime = Integer.parseInt(collectTime) - 30;
-        String strRequestTime = String.valueOf(requestTime);
+//        String collectTime = DateUtil.getDateTime("yyyyMMddHHmmss");
+//        long requestTime = Long.parseLong(collectTime) - 30;
+//        log.info("requestTime : " + requestTime);
+//        String strRequestTime = String.valueOf(requestTime);
 
         String userId = CmmUtil.nvl(request.getParameter("userId"));
         String minute = CmmUtil.nvl(request.getParameter("minute"));
 
         log.info("colNm : " + colNm);
-        log.info("strRequestTime : " + strRequestTime);
+        log.info("collectTime : " + collectTime);
         log.info("userId : " + userId);
         log.info("minute : " + minute);
 
-        LinkedList<Map<String, String>> rList = mongoService.getRsiLog(colNm, strRequestTime, userId, minute);
+        LinkedList<Map<String, String>> rList = mongoService.getRsiLog(colNm, collectTime, userId, minute);
 
         if (rList == null) {
             rList = new LinkedList<>();

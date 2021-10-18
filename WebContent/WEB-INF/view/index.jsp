@@ -136,7 +136,7 @@
         // RSI 로그 데이터 요청
         function getRsiLog(minute, currentDate){
             $.ajax({
-                url : "http://localhost:8080/getRsiLog.do",
+                url : "http://3.37.247.174:8080/getRsiLog.do",
                 type : "post",
                 dataType : "json",
                 data : {
@@ -191,7 +191,7 @@
 
             /* RSI를 수집하기 위한 ajax 요청 */
             req = $.ajax({
-                url : "http://192.168.0.4:5000/rsiAram",
+                url : "http://3.37.247.174:5000/rsiAram",
                 type : "post",
                 dataType : "list",
                 data : {

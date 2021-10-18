@@ -77,7 +77,9 @@
     <!-- window javascript 알림 테스트 end -->
 
     <script>
+
         function loginChk() {
+
             /* 로그인한 경우에만 rsiPlay() 함수 실행 */
             if ("<%=SS_USER_NAME%>" != "null") {
                 console.log("로그인중");
@@ -131,11 +133,11 @@
 
 
 
-
+        /* input type = "hidden" 에 value값으로 default(초기 정지상태, 실행중) / stop(중지 누른 순간 체크) / pause(사용자가 중지 누름) 기록 */
 
         // RSI 로그 데이터 요청
         function getRsiLog(minute, currentDate){
-            $.ajax({
+            logReq = $.ajax({
                 url : "http://3.37.247.174:8080/getRsiLog.do",
                 type : "post",
                 dataType : "json",
@@ -148,23 +150,26 @@
                     console.log(JSON.stringify(data))
                 }
             })
+
         }
 
         // RSI 로그 10초마다 요청
         function reqTimeLog(minute, currentDate){
             var repeat = setInterval(function() {
-                /* 중지를 눌렀다면(value=stop) ajax 요청 중지 + 실행 종료되었으므로 setInterval 종료 */
+                console.log("현재상태 : " + document.getElementById("isstop").value);
+                /* 중지를 눌렀다면(value=stop) setInterval 종료 */
                 if (document.getElementById("isstop").value === "stop") {
-                    // console.log("stop!");
-                    document.getElementById("isstop").value = "default";
+                    // 정지를 요청했다면 pause(중지) 상태로 변경하여 setInterval 중지 + elif 문에 해당하지 않으므로 ajax 요청 중지
+                    document.getElementById("isstop").value = "pause";
 
-                    /* 실행 중에 중지버튼을 누르면 ajax 취소(테스트 예정) + 더이상 setInterval 이 돌지 않게 종료 */
-                    clearInterval(repeat);
-
-                    // else (실행 버튼 누르고 실행중일 때)
-                } else {
-                    // 여기에 10초에 한번씩 요청하는 ajax 코드 넣으면 됨(실행중인 이상 계속 요청)
+                    // else (실행 버튼 누르고 실행중일 때 - value (Default는 초기 정지상태, 실행중일때)
+                } else if (document.getElementById("isstop").value === "default") {
+                    // 실행 중인 경우 6초에 한번씩 Log 요청
                     getRsiLog(minute, currentDate)
+                } else { // pause이면(stop을 눌러 정지상태 : clearInterval에 pause 상태 지정으로 더이상 함수 요청하지 않음)
+                    console.log("pause 상태! : " + document.getElementById("isstop").value);
+                    clearInterval(repeat);
+                    console.log("clearInterval 완료");
                 }
             }, 6000)
         }
@@ -173,6 +178,10 @@
         /* RSI 30 알림 기능 START (수집, 데이터 요청 ajax 실행)(로그인한 경우에만) */
         // 내가 클릭한 시점으로 데이터저장
         function rsiPlay(){
+
+            // 재시작 할 경우에 stopCheck의 value가 default가 아닌 pause일 수 있으므로, 초기 정지상태 또는 실행중인 상태를 표시하는 default로 초기화
+            document.getElementById("isstop").value = "default";
+
             let obj_length = document.getElementsByName("coin").length;
             let coinList = [];
 
@@ -205,16 +214,21 @@
             var repeat = setInterval(function() {
                 /* 중지를 눌렀다면(value=stop) ajax 요청 중지 + 실행 종료되었으므로 setInterval 종료 */
                 if (document.getElementById("isstop").value === "stop") {
+
                     console.log("stop!");
-                    document.getElementById("isstop").value = "default";
-                    console.log("changed");
-                    /* 요청했던 ajax 중지(테스트 해봐야 암) */
-                    req.abort();
-                    console.log("req aborted");
-                    /* 실행 중에 중지버튼을 누르면 ajax 취소(테스트 예정) + 더이상 setInterval 이 돌지 않게 종료 */
-                    clearInterval(repeat);
-                } else {
+                    document.getElementById("isstop").value = "pause";
+                    console.log("changed value(pause) : " + document.getElementById("isstop").value);
+                    /* 요청했던 ajax 중지 */
+
+
+                } else if (document.getElementById("isstop").value === "default") {
                     console.log("요청 실행 중(nonstop)");
+                } else if (document.getElementById("isstop").value === "pause") {
+                    /* 실행 중에 중지버튼을 setInterval 종료, 수집 종료 */
+
+                    req.abort();
+                    clearInterval(repeat);
+                    console.log("pause : req 중지 재요청");
                 }
             }, 1000)
         }

@@ -25,6 +25,8 @@ public interface IMongoMapper {
     // RSI 가져오기
     public LinkedList<Map<String, String>> getRsiLog(String colNm, String collectTime, String userId, String minute);
 
+    // Crawling 데이터 저장
+    public int insertCrawler(List<Map<String, Object>> pList) throws Exception;
 
 
 

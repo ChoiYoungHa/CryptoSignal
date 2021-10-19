@@ -49,7 +49,7 @@ public class MongoController {
         String rsi = CmmUtil.nvl(request.getParameter("rsi"));
         String collectTime = CmmUtil.nvl(request.getParameter("collectTime"));
 
- //       String collectTime = DateUtil.getDateTime("yyyyMMddHHmmss");
+        //       String collectTime = DateUtil.getDateTime("yyyyMMddHHmmss");
 
         log.info("symbol :" + symbol);
         log.info("minute : " + minute);
@@ -114,5 +114,14 @@ public class MongoController {
         log.info("getRsiLog End!");
 
         return rList;
+    }
+
+
+    @RequestMapping(value = "getCryptoNew")
+    public void getCryptoNew(){
+
+
+
+
     }
 }

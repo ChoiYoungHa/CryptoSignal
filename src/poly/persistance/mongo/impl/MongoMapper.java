@@ -144,4 +144,35 @@ public class MongoMapper extends AbstractMongoDBComon implements IMongoMapper {
     }
 
 
+
+    // MongoDB에 크롤링한 데이터저장
+    @Override
+    public int insertCrawler(List<Map<String, Object>> pList) throws Exception {
+        log.info(this.getClass().getName() + ".insertRsiLog Start!");
+
+        int res = 0;
+
+        if (pList == null) {
+            pList = new ArrayList<>();
+        }
+
+        String colNm = "Crawler";
+
+        // 저장할 컬렉션 객체 생성
+        MongoCollection<Document> collection = mongodb.getCollection(colNm);
+
+        Iterator<Map<String, Object>> it = pList.iterator();
+        while (it.hasNext()) {
+            Map<String, Object> rMap = it.next();
+            collection.insertOne(new Document(rMap));
+        }
+
+        res = 1;
+
+        log.info(this.getClass().getName() + ".insertRsiLog End!");
+
+        return res;
+    }
+
+
 }

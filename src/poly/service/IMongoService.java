@@ -19,4 +19,7 @@ public interface IMongoService {
     // RSI 로그 가져오기
     public LinkedList<Map<String, String>> getRsiLog(String colNm, String collectTime, String userId, String minute) throws Exception;
 
+    // Crawling 데이터 저장
+    public int insertCrawler() throws Exception;
+
 }

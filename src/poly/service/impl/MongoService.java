@@ -109,8 +109,9 @@ public class MongoService implements IMongoService {
             rs.write(writer);
             rs.flush();
 
-            return mongoMapper.insertCrawler(pList);
-        }
+//          return mongoMapper.insertCrawler(pList);
+    }
+        return 1;
     }
 
 }

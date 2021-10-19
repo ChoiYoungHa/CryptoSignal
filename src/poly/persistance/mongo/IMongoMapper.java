@@ -13,6 +13,7 @@ public interface IMongoMapper {
     public boolean createCollection(String colNm) throws Exception;
 
     // RSI 저장
+
     /**
      * 멜론 노래 리스트 저장하기
      *
@@ -28,7 +29,11 @@ public interface IMongoMapper {
     // Crawling 데이터 저장
     public int insertCrawler(List<Map<String, Object>> pList) throws Exception;
 
+    // CryptoNews 가져오기
+    public LinkedList<Map<String, String>> getCryptoNews() throws Exception;
 
+    // 뉴스 컬렉션 삭제
+    public int deleteNewsInfo() throws Exception;
 
 
 }

@@ -3,6 +3,7 @@ package poly.service.impl;
 import org.apache.log4j.Logger;
 
 import org.springframework.stereotype.Service;
+import poly.dto.NlpDTO;
 import poly.persistance.mongo.IMongoMapper;
 import poly.service.IMongoService;
 
@@ -12,20 +13,21 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.time.LocalDate;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import poly.service.INlpService;
 
 @Service("MongoService")
 public class MongoService implements IMongoService {
 
     @Resource(name = "MongoMapper")
     private IMongoMapper mongoMapper;
+
+    @Resource(name = "NlpService")
+    private INlpService nlpService;
 
     private Logger log = Logger.getLogger(this.getClass());
 
@@ -57,7 +59,7 @@ public class MongoService implements IMongoService {
         Document doc = null;
 
         // 10페이지 링크주소가 담길 파일객체 생성
-        FileWriter fw = new FileWriter("/crawlData/coinReaders.txt");
+        FileWriter fw = new FileWriter("D:\\Project\\CryptoSignal\\etc\\coinReaders.txt");
         BufferedWriter bw = new BufferedWriter(fw);
 
         // 10페이지 Document 객체 요청
@@ -75,42 +77,43 @@ public class MongoService implements IMongoService {
         }
 
         // 링크주소를 불러옴
-        FileReader rw = new FileReader("Base.코인리더스.txt");
+        FileReader rw = new FileReader("D:\\Project\\CryptoSignal\\etc\\coinReaders.txt");
         BufferedReader br = new BufferedReader(rw);
 
         String readLine = null;
 
-        // 링크주소의 제목, 내용, 작성일 등을 SCD 형태로 저장할 파일 객체생성
-        FileWriter result = new FileWriter("코인리더스_결과.scd");
-        BufferedWriter rs = new BufferedWriter(result);
+        ArrayList<Map<String, Object>> pList = new ArrayList<Map<String, Object>>();
+        NlpDTO pDTO = new NlpDTO();
 
         while ((readLine = br.readLine()) != null) {
             doc = Jsoup.connect(readLine).get();
 
             // 메타데이터의 title 정보 크롤링
-            String title = "^title : " + doc.select("head>title").text() + "\n";
-
-            // 본문내용 p태그 4개 크롤링 후 이어붙히기
-            String contentResult = "";
-            for (int n = 0; n <= 4; n++) {
-                String content = doc.select("div#textinput>p:eq(" + n + ")").text();
-                contentResult += content;
-            }
-
-            // 메타데이터에서 게시일자 크롤링
-            String date = "^date : " + doc.head().select("meta[property=article:published_time]").
+            String title = doc.select("head>title").text() + "\n";
+            String content = doc.head().select("meta[name=description]").
                     first().attr("content") + "\n";
-            String writer = "^writer : " + doc.select("div.writer_time>span.writer").first().text() + "\n";
+            // 메타데이터에서 게시일자 크롤링
+            String date = doc.head().select("meta[property=article:published_time]").
+                    first().attr("content") + "\n";
 
-            rs.write(title);
-            // 이어붙힌 최종결과값 SCD 형태로 변환 후 저장
-            rs.write("^content : " + contentResult + "\n");
-            rs.write(date);
-            rs.write(writer);
-            rs.flush();
+            pDTO.setWord(title);
+            int point = nlpService.preProcessWordAnalysisForMind(pDTO);
 
-            return mongoMapper.insertCrawler(pList);
+            HashMap<String, Object> pMap = new HashMap<>();
+
+            pMap.put("title", title);
+            pMap.put("content", content);
+            pMap.put("date", date);
+            pMap.put("point", point);
+
+            // pmap에 오피니언 마이닝한 결과 최종저장
+
+            pList.add(pMap);
+            pMap = null;
         }
+        return mongoMapper.insertCrawler(pList);
     }
+
+
 
 }

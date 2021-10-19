@@ -117,11 +117,14 @@ public class MongoController {
     }
 
 
-    @RequestMapping(value = "getCryptoNew")
-    public void getCryptoNew(){
+    // 크롤링 후 오피니언 마이닝 mongo 저장
+    @RequestMapping(value = "getCryptoNews")
+    public void getCryptoNews() throws Exception {
+        log.info("getCryptoNews Start!");
+        int i = mongoService.insertCrawler();
+        log.info(i);
 
-
-
-
+        log.info("크롤링 중");
+        log.info("getCryptoNews End!");
     }
 }

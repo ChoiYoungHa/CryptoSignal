@@ -7,6 +7,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.Cursor;
 import com.mongodb.DBCursor;
 import com.mongodb.client.MongoCursor;
+import com.mongodb.client.result.DeleteResult;
 import config.Mapper;
 import org.apache.log4j.Logger;
 import org.bson.Document;
@@ -25,12 +26,17 @@ import poly.persistance.mongo.IMongoMapper;
 import poly.persistance.mongo.comm.AbstractMongoDBComon;
 import poly.util.CmmUtil;
 
+import javax.annotation.Resource;
+
 
 @Mapper("MongoMapper")
 public class MongoMapper extends AbstractMongoDBComon implements IMongoMapper {
 
     @Autowired
     private MongoTemplate mongodb;
+
+    @Resource(name = "MongoMapper")
+    private IMongoMapper mongoMapper;
 
     private Logger log = Logger.getLogger(this.getClass());
 
@@ -143,8 +149,6 @@ public class MongoMapper extends AbstractMongoDBComon implements IMongoMapper {
         return rList;
     }
 
-
-
     // MongoDB에 크롤링한 데이터저장
     @Override
     public int insertCrawler(List<Map<String, Object>> pList) throws Exception {
@@ -157,6 +161,9 @@ public class MongoMapper extends AbstractMongoDBComon implements IMongoMapper {
         }
 
         String colNm = "Crawler";
+        int deleteNewsResult = mongoMapper.deleteNewsInfo();
+        log.info("deleteNewsResult 성공 1, 실패 0" + deleteNewsResult);
+        super.createCollection(colNm);
 
         // 저장할 컬렉션 객체 생성
         MongoCollection<Document> collection = mongodb.getCollection(colNm);
@@ -170,6 +177,110 @@ public class MongoMapper extends AbstractMongoDBComon implements IMongoMapper {
         res = 1;
 
         log.info(this.getClass().getName() + ".insertRsiLog End!");
+
+        return res;
+    }
+
+
+    // 몽고디비 news 데이터 요청
+    @Override
+    public LinkedList<Map<String, String>> getCryptoNews() throws Exception {
+        log.info(this.getClass().getName() + "getCryptoNews Start!");
+
+        LinkedList<Map<String, String>> rList = new LinkedList<Map<String, String>>();
+
+        String colNm = "Crawler";
+
+        MongoCollection<Document> col = mongodb.getCollection(colNm);
+        FindIterable<Document> rs = col.find();
+
+        Iterator<Document> cursor = rs.iterator();
+
+        while (cursor.hasNext()) {
+            Document doc = cursor.next();
+
+            if (doc == null) {
+                doc = new Document();
+            }
+
+            String title = CmmUtil.nvl(doc.getString("title"));
+            String content = CmmUtil.nvl(doc.getString("content"));
+            String date = CmmUtil.nvl(doc.getString("date"));
+            String point = CmmUtil.nvl(doc.getString("point"));
+
+            log.info("title : " + title);
+            log.info("content : " + content);
+            log.info("date : " + date);
+            log.info("point : " + point);
+
+            Map<String, String> rMap = new LinkedHashMap<String, String>();
+
+            rMap.put("title", title);
+            rMap.put("content", content);
+            rMap.put("date", date);
+            rMap.put("point", point);
+            rList.add(rMap);
+
+            rMap = null;
+            doc = null;
+        }
+
+        cursor = null;
+        rs = null;
+        col = null;
+
+        log.info(this.getClass().getName() + "getRsiLog End!");
+
+        return rList;
+    }
+
+
+
+    // 몽고디비 데이터 삭제
+    @Override
+    public int deleteNewsInfo() {
+        log.info(this.getClass().getName() + "deleteNewsInfo start");
+
+        MongoCollection<Document> col = null;
+        Iterator<Document> cursor = null;
+        FindIterable<Document> dRs = null;
+
+        /*
+         * #############################################################################
+         * 기 등록된 데이터 사전 삭제 시작!
+         * #############################################################################
+         */
+
+        String colNm = "Crawler";
+        col = mongodb.getCollection(colNm);
+
+        Document document = new Document();
+
+        dRs = col.find(document);
+        cursor = dRs.iterator();
+        DeleteResult deleteResult = null;
+        int res = 0;
+
+        if(cursor.hasNext()) {
+
+            while (cursor.hasNext()) {
+                deleteResult = col.deleteOne(cursor.next());
+            }
+
+            res = (int) deleteResult.getDeletedCount();
+
+        }
+        cursor = null;
+        dRs = null;
+        col = null;
+        deleteResult = null;
+		/*
+	    MongoCollection<Document> collection = mongodb.getCollection(colNm);
+
+	    DeleteResult deleteResult = collection.deleteOne(new Document(pMap));
+	    int res = (int) deleteResult.getDeletedCount();
+		*/
+        log.info(this.getClass().getName() + "deleteUserInfo end");
 
         return res;
     }

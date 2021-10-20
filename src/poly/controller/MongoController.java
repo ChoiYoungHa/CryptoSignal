@@ -2,6 +2,7 @@ package poly.controller;
 
 import org.apache.log4j.Logger;
 import org.jsoup.helper.DataUtil;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -81,6 +82,7 @@ public class MongoController {
         // 데이터를 가져올 컬렉션
         String colNm = DateUtil.getDateTime("yyyy-MM-dd");
         String collectTime = CmmUtil.nvl(request.getParameter("currentDate"));
+        String coinCnt = CmmUtil.nvl(request.getParameter("coinCnt"));
 
         // 요청한 시간 이후에 데이터만 요청
 //        String collectTime = DateUtil.getDateTime("yyyyMMddHHmmss");
@@ -95,8 +97,9 @@ public class MongoController {
         log.info("collectTime : " + collectTime);
         log.info("userId : " + userId);
         log.info("minute : " + minute);
+        log.info("coinCnt : " + coinCnt);
 
-        LinkedList<Map<String, String>> rList = mongoService.getRsiLog(colNm, collectTime, userId, minute);
+        LinkedList<Map<String, String>> rList = mongoService.getRsiLog(colNm, collectTime, userId, minute, coinCnt);
 
         if (rList == null) {
             rList = new LinkedList<>();
@@ -117,15 +120,33 @@ public class MongoController {
     }
 
 
-    // 크롤링 후 오피니언 마이닝 mongo 저장
+    // 오전 06시 30분에 매일 크롤링하면서 오피니언 마이닝 후 mongo 저장
+    @Scheduled(cron = "0  30  06  *  *  *")
     @RequestMapping(value = "getCryptoNews")
-    public void getCryptoNews() throws Exception {
+    public String getCryptoNews() throws Exception {
         log.info("getCryptoNews Start!");
         int i = mongoService.insertCrawler();
         log.info(i);
 
         log.info("크롤링 중");
         log.info("getCryptoNews End!");
+
+        return "/index";
+    }
+
+    // 오피니언마이닝 분석이 완료된 뉴스 데이터 요청
+    @RequestMapping("getCryptoNewsList")
+    @ResponseBody
+    public List<Map<String, String>> getCryptoNewsList() throws Exception {
+        log.info("getCryptoNewsList Start!");
+        List<Map<String, String>> cryptoNews = mongoService.getCryptoNews();
+
+        if (cryptoNews == null) {
+            cryptoNews = new LinkedList<>();
+        }
+
+        log.info("getCryptoNewsList End!");
+        return cryptoNews;
     }
 
 

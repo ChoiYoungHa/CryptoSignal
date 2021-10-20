@@ -17,9 +17,12 @@ public interface IMongoService {
     public int insertRsiLog(Map<String, Object> pMap, String colNm) throws Exception;
 
     // RSI 로그 가져오기
-    public LinkedList<Map<String, String>> getRsiLog(String colNm, String collectTime, String userId, String minute) throws Exception;
+    public LinkedList<Map<String, String>> getRsiLog(String colNm, String collectTime, String userId, String minute, String coinCnt) throws Exception;
 
     // Crawling 데이터 저장
     public int insertCrawler() throws Exception;
+
+    // CryptoNews 가져오기
+    public List<Map<String, String>> getCryptoNews() throws Exception;
 
 }

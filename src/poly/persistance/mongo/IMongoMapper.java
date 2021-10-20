@@ -24,13 +24,13 @@ public interface IMongoMapper {
     public int insertRsiLog(Map<String, Object> pMap, String colNm) throws Exception;
 
     // RSI 가져오기
-    public LinkedList<Map<String, String>> getRsiLog(String colNm, String collectTime, String userId, String minute);
+    public LinkedList<Map<String, String>> getRsiLog(String colNm, String collectTime, String userId, String minute, String coinCnt);
 
     // Crawling 데이터 저장
     public int insertCrawler(List<Map<String, Object>> pList) throws Exception;
 
-    // CryptoNews 가져오기
-    public LinkedList<Map<String, String>> getCryptoNews() throws Exception;
+    // mongoDB news 데이터 가져오기
+    public List<Map<String, String>> getCryptoNews() throws Exception;
 
     // 뉴스 컬렉션 삭제
     public int deleteNewsInfo() throws Exception;

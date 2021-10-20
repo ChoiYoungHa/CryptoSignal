@@ -132,6 +132,43 @@
         }
 
 
+        /* 실시간으로 수집해서 가져오는 로그기록을 [로그] 항목란에 배포 */
+        function writeLog(data) {
+            console.log("write Log start");
+
+            for (var i=0; i<data.length; i++) {
+                console.log(data[i].symbol);
+                console.log(data[i].rsi);
+                console.log(data[i].getMinute);
+
+                var logs = '<div class="preview-item border-bottom flex-grow"> <div class="preview-item-content d-flex flex-grow"> <div class="flex-grow"> <div class="d-sm-flex justify-content-between text-center font-weight-bold">' + data[i].symbol + '  코인은  ' + data[i].getMinute  + '분봉 기준  <span class="yellow">RSI  ' + data[i].rsi+ '</span> 입니다. </div> </div> </div> </div> </div>';
+                $("#totalLog").prepend(logs);
+
+                // rsi 과매수 구간
+                if (Number(data[i].rsi) >= 50) {
+                    console.log("rsi 70 이상 과매수 구간");
+                    var maxRsi = '<div class="preview-item border-bottom flex-grow"> <div class="preview-item-content d-flex flex-grow"> <div class="flex-grow"> <div class="d-sm-flex justify-content-between text-center font-weight-bold">' + data[i].symbol + '  ' + data[i].getMinute  + '분봉 기준  RSI  ' + data[i].rsi +' | ' + getCurrentDate() + '</div> </div> </div> </div> </div>';
+                    $("#maxRsiLog").prepend(maxRsi);
+                    maxRsi = '';
+                }
+
+                // rsi 과매도 구간
+                else if (Number(data[i].rsi) <= 45) {
+                    console.log("rsi 30 이하 과매도 구간");
+                    var minRsi = '<div class="preview-item border-bottom flex-grow"> <div class="preview-item-content d-flex flex-grow"> <div class="flex-grow"> <div class="d-sm-flex justify-content-between text-center font-weight-bold">' + data[i].symbol + '  ' + data[i].getMinute  + '분봉 기준  RSI  ' + data[i].rsi +' | ' + getCurrentDate() + '</div> </div> </div> </div> </div>';
+                    $("#minRsiLog").prepend(minRsi);
+                    minRsi = '';
+                }
+
+                //
+                /*
+                var logs = '<div class="preview-item border-bottom flex-grow"> <div class="preview-item-content d-flex flex-grow"> <div class="flex-grow"> <div class="d-sm-flex justify-content-between"> <div class="col-4">' + data[i].symbol + '</div> <div class="col-4">' + data[i].rsi + '</div> <div class="col-4">' + data[i].getMinute + '</div> </div> </div> </div> </div>';
+                $("#totalLog").append(logs);
+                */
+
+                logs = '';
+            }
+        }
 
         /* input type = "hidden" 에 value값으로 default(초기 정지상태, 실행중) / stop(중지 누른 순간 체크) / pause(사용자가 중지 누름) 기록 */
 
@@ -148,6 +185,7 @@
                 },
                 success: function (data) {
                     console.log(JSON.stringify(data))
+                    writeLog(data)
                 }
             })
 
@@ -183,54 +221,61 @@
             document.getElementById("isstop").value = "default";
 
             let obj_length = document.getElementsByName("coin").length;
-            let coinList = [];
 
-            for (let i = 0; i < obj_length; i++) {
-                if (document.getElementsByName("coin")[i].checked == true) {
-                    coinList.push(document.getElementsByName("coin")[i].value);
+            if (obj_length == 0) {
+                Swal.fire('최소 1개의 코인을 선택해 주세요!','','warning');
+
+            } else {
+                let coinList = [];
+
+                for (let i = 0; i < obj_length; i++) {
+                    if (document.getElementsByName("coin")[i].checked == true) {
+                        coinList.push(document.getElementsByName("coin")[i].value);
+                    }
                 }
+                let currentDate = getCurrentDate();
+                console.log("currentData : " + currentDate)
+                let minute = $("#unit-select option:selected").val();
+                reqTimeLog(minute, currentDate)
+
+                console.log(coinList[0]);
+                console.log(minute)
+
+                /* RSI를 수집하기 위한 ajax 요청 */
+                req = $.ajax({
+                    url: "http://192.168.25.33:5000/rsiAram",
+                    type: "post",
+                    dataType: "list",
+                    data: {
+                        "coinList": coinList,
+                        "minute": minute,
+                        "userId": <%=ss_user_id%>,
+                        "collectTime": currentDate,
+                        "coinCnt" : obj_length
+                    }
+                })
+
+                var repeat = setInterval(function () {
+                    /* 중지를 눌렀다면(value=stop) ajax 요청 중지 + 실행 종료되었으므로 setInterval 종료 */
+                    if (document.getElementById("isstop").value === "stop") {
+
+                        console.log("stop!");
+                        document.getElementById("isstop").value = "pause";
+                        console.log("changed value(pause) : " + document.getElementById("isstop").value);
+                        /* 요청했던 ajax 중지 */
+
+
+                    } else if (document.getElementById("isstop").value === "default") {
+                        console.log("요청 실행 중(nonstop)");
+                    } else if (document.getElementById("isstop").value === "pause") {
+                        /* 실행 중에 중지버튼을 setInterval 종료, 수집 종료 */
+
+                        req.abort();
+                        clearInterval(repeat);
+                        console.log("pause : req 중지 재요청");
+                    }
+                }, 1000)
             }
-            let currentDate = getCurrentDate();
-            console.log("currentData : " + currentDate)
-            let minute = $("#unit-select option:selected").val();
-            reqTimeLog(minute,currentDate)
-
-            console.log(coinList[0]);
-            console.log(minute)
-
-            /* RSI를 수집하기 위한 ajax 요청 */
-            req = $.ajax({
-                url : "http://3.37.247.174:5000/rsiAram",
-                type : "post",
-                dataType : "list",
-                data : {
-                    "coinList": coinList,
-                    "minute" : minute,
-                    "userId" : <%=ss_user_id%>,
-                    "collectTime" : currentDate
-                }
-            })
-
-            var repeat = setInterval(function() {
-                /* 중지를 눌렀다면(value=stop) ajax 요청 중지 + 실행 종료되었으므로 setInterval 종료 */
-                if (document.getElementById("isstop").value === "stop") {
-
-                    console.log("stop!");
-                    document.getElementById("isstop").value = "pause";
-                    console.log("changed value(pause) : " + document.getElementById("isstop").value);
-                    /* 요청했던 ajax 중지 */
-
-
-                } else if (document.getElementById("isstop").value === "default") {
-                    console.log("요청 실행 중(nonstop)");
-                } else if (document.getElementById("isstop").value === "pause") {
-                    /* 실행 중에 중지버튼을 setInterval 종료, 수집 종료 */
-
-                    req.abort();
-                    clearInterval(repeat);
-                    console.log("pause : req 중지 재요청");
-                }
-            }, 1000)
         }
 
         /* 실행중인 RSI 30 알람체크 기능 중지 */
@@ -239,13 +284,6 @@
             document.getElementById("rsistop").style.display = "none";
             document.getElementById("isstop").value = "stop";
         }
-
-        // $(document).ajaxStart(function () {
-        //     console.log("ajstart");
-        // });
-
-
-
 
     </script>
 
@@ -302,10 +340,11 @@
 
     </div>
 
-    <!-- ########################################## RSI 알림 설정 등록 ########################################## -->
+
     <div class="container-fluid page-body-wrapper">
         <div class="main-panel">
             <div class="content-wrapper">
+                <!-- ########################################## RSI 알림 설정 등록 ########################################## -->
                 <div class="row">
                     <div class="col-md-4 grid-margin stretch-card">
                         <div class="card">
@@ -368,13 +407,13 @@
                     <!-- ############################ RSI 알림 받을 Coin List ############################ -->
                     <div class="col-md-8 grid-margin stretch-card">
                         <div class="card">
-                            <div class="card-body" style="height: 450px; overflow: auto;">
+                            <div class="card-body">
                                 <div class="d-flex flex-row justify-content-between">
                                     <div>
                                         <h4 class="card-title">Coin List</h4>
                                     </div>
                                 </div>
-                                <div class="row">
+                                <div class="row" id="coinList" style="height: 450px; overflow: auto;">
                                     <div class="col-12">
                                         <div class="preview-list">
 
@@ -1011,14 +1050,17 @@
                     <div class="col-md-12 grid-margin">
                         <div class="card">
                             <div class="card-body">
-                                <div class="d-flex flex-row p-3">
-                                    <div class="align-self-top">
-                                        <h4 class="card-title">로그 기록</h4>
-                                        <div id="totalLog"></div>
-                                        <%--                                        <h3 class="mb-0">2800</h3>--%>
-                                    </div>
-                                    <div class="align-self-center flex-grow text-right">
-                                        <i class="icon-lg mdi mdi-chart-pie text-primary"></i>
+                                <h4 class="card-title mb-0">로그 기록 <i class="icon-md mdi mdi-chart-pie text-primary"></i></h4>
+                                <div class="preview-list">
+                                    <div class="d-flex flex-row p-3" style="overflow:auto;">
+
+                                        <div id="logList" class="preview-item border-bottom flex-grow" style="max-height: 200px; overflow: auto;">
+                                            <div class="preview-item-content d-flex flex-grow">
+                                                <div id="totalLog" class="flex-grow">
+
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1026,26 +1068,21 @@
                     </div>
                 </div>
 
-                <!-- 코인 로그 2분할-1 -->
+                <!-- 코인 과매도 구간(2분할-1) -->
                 <div class="row">
                     <div class="col-md-6 grid-margin stretch-card">
                         <div class="card">
                             <div class="card-body">
-                                <h4 class="card-title">과매도 RSI 30</h4>
+                                <h4 class="card-title border-bottom mb-0 ml-2 pb-2">과매도 RSI 30</h4>
                                 <div class="preview-list">
-                                    <div class="preview-item border-bottom">
-                                        <div class="preview-thumbnail">
-                                            <img src="/resource/assets/images/faces/face6.jpg" alt="image" class="rounded-circle img-sm" />
-                                        </div>
-                                        <div class="preview-item-content d-flex flex-grow">
-                                            <div class="flex-grow">
-                                                <div class="d-sm-flex justify-content-between">
-                                                    <h6 class="preview-subject">Coin name</h6>
-                                                    <div class="d-flex">
-                                                        <p class="text-small text-muted border-right pr-3">날짜/시간</p>
-                                                    </div>
+                                    <div class="d-flex flex-row p-3" style="overflow:auto;">
+                                        <div id="minList" class="preview-item flex-grow" style="max-height: 200px; overflow: auto;">
+                                            <div class="preview-item-content d-flex flex-grow">
+
+                                                <!-- RSI가 30 이하인 코인 정보를 계속 prepend -->
+                                                <div id="minRsiLog" class="flex-grow">
+
                                                 </div>
-                                                <p>description</p>
                                             </div>
                                         </div>
                                     </div>
@@ -1053,27 +1090,22 @@
                             </div>
                         </div>
                     </div>
-                    <!-- 코인 로그 2분할-1 -->
+                    <!-- 코인 과매도 구간(2분할-1) -->
 
-                    <!-- 코인 로그 2분할-2 -->
+                    <!-- 코인 과매수 구간(2분할-2) -->
                     <div class="col-md-6 grid-margin stretch-card">
                         <div class="card">
                             <div class="card-body">
-                                <h4 class="card-title">과매수 RSI 70</h4>
+                                <h4 class="card-title border-bottom mb-0 ml-2 pb-2">과매수 RSI 70</h4>
                                 <div class="preview-list">
-                                    <div class="preview-item border-bottom">
-                                        <div class="preview-thumbnail">
-                                            <img src="/resource/assets/images/faces/face6.jpg" alt="image" class="rounded-circle img-sm" />
-                                        </div>
-                                        <div class="preview-item-content d-flex flex-grow">
-                                            <div class="flex-grow">
-                                                <div class="d-sm-flex justify-content-between">
-                                                    <h6 class="preview-subject">Coin name</h6>
-                                                    <div class="d-flex">
-                                                        <p class="text-small text-muted border-right pr-3">날짜/시간</p>
-                                                    </div>
+                                    <div class="d-flex flex-row p-3" style="overflow:auto;">
+                                        <div id="maxList" class="preview-item flex-grow" style="max-height: 200px; overflow: auto;">
+                                            <div class="preview-item-content d-flex flex-grow">
+
+                                                <!-- RSI가 70 이상인 코인 정보를 계속 prepend -->
+                                                <div id="maxRsiLog" class="flex-grow">
+
                                                 </div>
-                                                <p>description</p>
                                             </div>
                                         </div>
                                     </div>
@@ -1082,7 +1114,7 @@
                         </div>
                     </div>
                 </div>
-                <!-- 코인 로그 2분할-2 -->
+                <!-- 코인 과매수 구간(2분할-2) -->
 
                 <!-- 코인 관련 종합 뉴스 기록 -->
                 <div class="row">
@@ -1192,8 +1224,24 @@
 </div>
 
 <style>
-    .card-body::-webkit-scrollbar {
+    #coinList::-webkit-scrollbar {
         display: none;
+    }
+
+    #logList::-webkit-scrollbar {
+        display: none;
+    }
+
+    #minList::-webkit-scrollbar {
+        display: none;
+    }
+
+    #maxList::-webkit-scrollbar {
+        display: none;
+    }
+
+    .yellow {
+        color: yellow;
     }
 
 </style>

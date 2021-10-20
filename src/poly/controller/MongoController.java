@@ -127,4 +127,6 @@ public class MongoController {
         log.info("크롤링 중");
         log.info("getCryptoNews End!");
     }
+
+
 }

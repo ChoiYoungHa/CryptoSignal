@@ -153,6 +153,7 @@
             return newsDate;
         }
 
+
         /* 실시간으로 수집해서 가져오는 로그기록을 [로그] 항목란에 배포 */
         function writeLog(data) {
             console.log("write Log start");
@@ -162,23 +163,24 @@
                 console.log(data[i].rsi);
                 console.log(data[i].getMinute);
 
-                var logs = '<div class="preview-item border-bottom flex-grow"> <div class="preview-item-content d-flex flex-grow"> <div class="flex-grow"> <div class="d-sm-flex justify-content-between text-center font-weight-bold">' + data[i].symbol + ' 코인은 ' + data[i].getMinute + '분봉 기준 <span class="yellow d-inline-block">RSI ' + data[i].rsi+ '</span> 입니다. </div> </div> </div> </div> </div>';
+                //  var logs = '<div class="preview-item border-bottom flex-grow"> <div class="preview-item-content d-flex flex-grow"> <div class="flex-grow"> <div class=" justify-content-between font-weight-bold"><span class="yellow d-inline-block" onclick="upbitCoinInfo(' + data[i].symbol + ')">' + data[i].symbol + '</span>  코인은 &nbsp; ' + data[i].getMinute + '분봉 &nbsp; 기준 &nbsp;<span class="yellow d-inline-block">RSI&nbsp;  ' + data[i].rsi+ '</span> &nbsp; 입니다. &nbsp; [ ' + formatDate() + ' ]</div> </div> </div> </div> </div>';
+                var logs = '<div class="preview-item border-bottom flex-grow"> <div class="preview-item-content d-flex flex-grow"> <div class="flex-grow"> <div class=" justify-content-between font-weight-bold"><span class="yellow d-inline-block">' + data[i].symbol +  '</span> &nbsp;코인은 &nbsp; ' + data[i].getMinute + '분봉 &nbsp;기준 &nbsp;<span class="yellow d-inline-block">RSI&nbsp;  ' + data[i].rsi+ '</span> &nbsp; 입니다. &nbsp; [ ' + formatDate() + ' ]</div> </div> </div> </div> </div>';
                 $("#totalLog").prepend(logs);
 
 // rsi 과매수 구간
                 if (Number(data[i].rsi) >= 70) {
-                    notify(data[i].coinName, data[i].rsi);
-                    console.log("rsi 70 이상 과매수 구간");
-                    var maxRsi = '<div class="preview-item border-bottom flex-grow"> <div class="preview-item-content d-flex flex-grow"> <div class="flex-grow"> <div class="d-sm-flex justify-content-between text-center font-weight-bold">' + data[i].symbol + ' ' + data[i].getMinute + '분봉 기준 RSI ' + data[i].rsi +' | ' + formatDate() + '</div> </div> </div> </div> </div>';
+                    notify(data[i].symbol, data[i].rsi);
+                    console.log("rsi 70 이상 과매수 구간" + data[i].symbol);
+                    var maxRsi = '<div class="preview-item border-bottom flex-grow"> <div class="preview-item-content d-flex flex-grow"> <div class="flex-grow"> <div class=" justify-content-between font-weight-bold">' + data[i].symbol + ' &nbsp;' + data[i].getMinute + '분봉 &nbsp;기준 &nbsp;' + '<span class="d-inline-block red">RSI ' + data[i].rsi +' </span> &nbsp; [' + formatDate() + ' ]</div> </div> </div> </div> </div>';
                     $("#maxRsiLog").prepend(maxRsi);
                     maxRsi = '';
                 }
 
 // rsi 과매도 구간
                 else if (Number(data[i].rsi) <= 30) {
-                    notify(data[i].coinName, data[i].rsi);
-                    console.log("rsi 30 이하 과매도 구간");
-                    var minRsi = '<div class="preview-item border-bottom flex-grow"> <div class="preview-item-content d-flex flex-grow"> <div class="flex-grow"> <div class="d-sm-flex justify-content-between text-center font-weight-bold">' + data[i].symbol + ' ' + data[i].getMinute + '분봉 기준 RSI ' + data[i].rsi +' | ' + formatDate() + '</div> </div> </div> </div> </div>';
+                    notify(data[i].symbol, data[i].rsi);
+                    console.log("rsi 30 이하 과매도 구간"); //d-sm-flex
+                    var minRsi = '<div class="preview-item border-bottom flex-grow"> <div class="preview-item-content d-flex flex-grow"> <div class="flex-grow"> <div class=" justify-content-between font-weight-bold">' + data[i].symbol + ' &nbsp;' + data[i].getMinute + '분봉 &nbsp;기준 &nbsp;' + '<span class="d-inline-block blue">RSI ' + data[i].rsi +' </span> &nbsp; [ ' + formatDate() + ' ]</div> </div> </div> </div> </div>';
                     $("#minRsiLog").prepend(minRsi);
                     minRsi = '';
                 }
@@ -190,7 +192,8 @@
         /* input type = "hidden" 에 value값으로 default(초기 정지상태, 실행중) / stop(중지 누른 순간 체크) / pause(사용자가 중지 누름) 기록 */
 
         // RSI 로그 데이터 요청
-        function getRsiLog(minute, currentDate){
+        function getRsiLog(minute, currentDate, coinLimit){
+            console.log("getRSILog Start! ss_user_id : " + <%=ss_user_id%>)
             logReq = $.ajax({
                 url : "http://3.37.247.174:8080/getRsiLog.do",
                 type : "post",
@@ -198,7 +201,8 @@
                 data : {
                     "userId" : <%=ss_user_id%>,
                     "minute" : minute,
-                    "currentDate" : currentDate
+                    "currentDate" : currentDate,
+                    "coinCnt" : coinLimit
                 },
                 success: function (data) {
                     console.log(JSON.stringify(data))
@@ -209,7 +213,7 @@
         }
 
         // RSI 로그 10초마다 요청
-        function reqTimeLog(minute, currentDate){
+        function reqTimeLog(minute, currentDate, coinLimit){
             var repeat = setInterval(function() {
                 console.log("현재상태 : " + document.getElementById("isstop").value);
                 /* 중지를 눌렀다면(value=stop) setInterval 종료 */
@@ -220,7 +224,7 @@
 // else (실행 버튼 누르고 실행중일 때 - value (Default는 초기 정지상태, 실행중일때)
                 } else if (document.getElementById("isstop").value === "default") {
 // 실행 중인 경우 6초에 한번씩 Log 요청
-                    getRsiLog(minute, currentDate)
+                    getRsiLog(minute, currentDate, coinLimit);
                 } else { // pause이면(stop을 눌러 정지상태 : clearInterval에 pause 상태 지정으로 더이상 함수 요청하지 않음)
                     console.log("pause 상태! : " + document.getElementById("isstop").value);
                     clearInterval(repeat);
@@ -253,7 +257,7 @@
                 let currentDate = getCurrentDate();
                 console.log("currentData : " + currentDate)
                 let minute = $("#unit-select option:selected").val();
-                reqTimeLog(minute, currentDate)
+                reqTimeLog(minute, currentDate, obj_length)
 
                 console.log(coinList[0]);
                 console.log(minute)
@@ -385,7 +389,7 @@
                         <li class="nav-item dropdown border-left">
                             <a class="nav-link count-indicator dropdown-toggle" id="notificationDropdown" href="#" data-toggle="dropdown">
                                 <% if (SS_USER_NAME == null) { %>
-                                <div class="users mr-3" style="width: 150px; font-size: 20px;" onclick="location.href='/loginPage.do'">로그인 후 이용하세요
+                                <div class="users mr-3 font" style="width: 150px; font-size: 20px;" onclick="location.href='/loginPage.do'">로그인 후 이용하세요
                                 </div>
                             </a>
                         </li>
@@ -1325,6 +1329,14 @@
     /* font color yellow */
     .yellow {
         color: yellow;
+    }
+
+    .red {
+        color: red;
+    }
+
+    .blue {
+        color: blue;
     }
 
     /* 실행, 중지 버튼 등 버튼 공동 사이즈 지정*/

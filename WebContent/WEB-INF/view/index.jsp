@@ -175,7 +175,7 @@
                 }
 
 // rsi 과매도 구간
-                else if (Number(data[i].rsi) <= 50) {
+                else if (Number(data[i].rsi) <= 30) {
                     notify(data[i].coinName, data[i].rsi);
                     console.log("rsi 30 이하 과매도 구간");
                     var minRsi = '<div class="preview-item border-bottom flex-grow"> <div class="preview-item-content d-flex flex-grow"> <div class="flex-grow"> <div class="d-sm-flex justify-content-between text-center font-weight-bold">' + data[i].symbol + ' ' + data[i].getMinute + '분봉 기준 RSI ' + data[i].rsi +' | ' + formatDate() + '</div> </div> </div> </div> </div>';

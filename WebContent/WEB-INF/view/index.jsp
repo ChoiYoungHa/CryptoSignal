@@ -24,12 +24,16 @@
     <!-- inject:css -->
     <!-- endinject -->
     <!-- Layout styles -->
-    <link rel="stylesheet" href="/resource/assets/css/classic-horizontal/style.css?ver=1">
+    <link rel="stylesheet" href="/resource/assets/css/classic-horizontal/style.css?ver=3">
     <!-- End layout styles -->
     <link rel="shortcut icon" href="/resource/assets/images/favicon.png" />
     <!-- Sweet Alert -->
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+
+    <!-- font -->
+    <link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Noto+Sans+KR:wght@500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR&display=swap" rel="stylesheet">
     <!-- window javascript 알림 테스트 start -->
     <script type="text/javascript">
 
@@ -43,34 +47,36 @@
             if (window.Notification) {
                 Notification.requestPermission();
             }
+
+// 페이지 로딩과 함께 뉴스 리스트 가져오기
+            getCryptoNewsList();
+
         })
 
-        // /* ex) 2초 후 알람 등 */
-        // function calculate() {
-        //     setTimeout(function () {
-        //         notify();
-        //     }, 2000);
-        // }
 
-        function notify() {
+        function notify(coinName, RSI) {
 
             console.log("Notification permission : " + Notification.permission);
+            console.log("알림 요청! coinName : " + coinName + " , RSI 지수 : " + RSI);
 
             if (Notification.permission == 'granted') {
                 console.log("granted(알림 요청)");
-                var notification = new Notification('Notification title', {
-                    icon: 'http://cdn.sstatic.net/stackexchange/img/logos/so/so-icon.png',
-                    body: 'Notification text',
+                var notifyTitle = 'RSI 알림 (' + coinName + ')';
+                var notification = new Notification(notifyTitle, {
+                    icon: 'https://iconape.com/wp-content/png_logo_vector/upbit.png',
+                    body: ' RSI ' + RSI
                 });
 
                 console.log("알림 요청 끝");
 
                 /* 해당 알람을 클릭할 경우 upbit 홈페이지로 이동 */
                 notification.onclick = function () {
-                    window.open('http://upbit.com/exchange?code=CRIX.UPBIT.KRW-EOS');
+                    url = 'http://upbit.com/exchange?code=CRIX.UPBIT.' + coinName;
+                    window.open(url);
                 };
             } else {
-                alert("Notification not granted(크롬 설정에서 알림을 허용해 주세요)");
+                alert("알림 거부 상태입니다. 설정에서 알림을 허용해 주세요");
+                Notification.requestPermission();
             }
         }
     </script>
@@ -131,6 +137,21 @@
             return year + month + day + hour + minites + seconds;
         }
 
+        // rsi Log에 출력할 현재 시간을 10/20 21:36:20 형태로 변환하여 반환함
+        function formatDate() {
+            var fullDate = getCurrentDate();
+            var rsiDate = fullDate.substring(4,6) + "/" + fullDate.substring(6,8) + " " + fullDate.substring(8,10) + ":" + fullDate.substring(10,12) + ":" + fullDate.substring(12,14);
+
+            return rsiDate;
+        }
+
+        // MongoDB에서 넘겨받은 뉴스 수집날짜 형태 정제
+        function formatNewsDate(date) {
+
+            var newsDate = date.substring(5,7) + "/" + date.substring(8,10) + " " + date.substring(11,16);
+
+            return newsDate;
+        }
 
         /* 실시간으로 수집해서 가져오는 로그기록을 [로그] 항목란에 배포 */
         function writeLog(data) {
@@ -141,30 +162,26 @@
                 console.log(data[i].rsi);
                 console.log(data[i].getMinute);
 
-                var logs = '<div class="preview-item border-bottom flex-grow"> <div class="preview-item-content d-flex flex-grow"> <div class="flex-grow"> <div class="d-sm-flex justify-content-between text-center font-weight-bold">' + data[i].symbol + '  코인은  ' + data[i].getMinute  + '분봉 기준  <span class="yellow">RSI  ' + data[i].rsi+ '</span> 입니다. </div> </div> </div> </div> </div>';
+                var logs = '<div class="preview-item border-bottom flex-grow"> <div class="preview-item-content d-flex flex-grow"> <div class="flex-grow"> <div class="d-sm-flex justify-content-between text-center font-weight-bold">' + data[i].symbol + ' 코인은 ' + data[i].getMinute + '분봉 기준 <span class="yellow d-inline-block">RSI ' + data[i].rsi+ '</span> 입니다. </div> </div> </div> </div> </div>';
                 $("#totalLog").prepend(logs);
 
-                // rsi 과매수 구간
-                if (Number(data[i].rsi) >= 50) {
+// rsi 과매수 구간
+                if (Number(data[i].rsi) >= 70) {
+                    notify(data[i].coinName, data[i].rsi);
                     console.log("rsi 70 이상 과매수 구간");
-                    var maxRsi = '<div class="preview-item border-bottom flex-grow"> <div class="preview-item-content d-flex flex-grow"> <div class="flex-grow"> <div class="d-sm-flex justify-content-between text-center font-weight-bold">' + data[i].symbol + '  ' + data[i].getMinute  + '분봉 기준  RSI  ' + data[i].rsi +' | ' + getCurrentDate() + '</div> </div> </div> </div> </div>';
+                    var maxRsi = '<div class="preview-item border-bottom flex-grow"> <div class="preview-item-content d-flex flex-grow"> <div class="flex-grow"> <div class="d-sm-flex justify-content-between text-center font-weight-bold">' + data[i].symbol + ' ' + data[i].getMinute + '분봉 기준 RSI ' + data[i].rsi +' | ' + formatDate() + '</div> </div> </div> </div> </div>';
                     $("#maxRsiLog").prepend(maxRsi);
                     maxRsi = '';
                 }
 
-                // rsi 과매도 구간
-                else if (Number(data[i].rsi) <= 45) {
+// rsi 과매도 구간
+                else if (Number(data[i].rsi) <= 50) {
+                    notify(data[i].coinName, data[i].rsi);
                     console.log("rsi 30 이하 과매도 구간");
-                    var minRsi = '<div class="preview-item border-bottom flex-grow"> <div class="preview-item-content d-flex flex-grow"> <div class="flex-grow"> <div class="d-sm-flex justify-content-between text-center font-weight-bold">' + data[i].symbol + '  ' + data[i].getMinute  + '분봉 기준  RSI  ' + data[i].rsi +' | ' + getCurrentDate() + '</div> </div> </div> </div> </div>';
+                    var minRsi = '<div class="preview-item border-bottom flex-grow"> <div class="preview-item-content d-flex flex-grow"> <div class="flex-grow"> <div class="d-sm-flex justify-content-between text-center font-weight-bold">' + data[i].symbol + ' ' + data[i].getMinute + '분봉 기준 RSI ' + data[i].rsi +' | ' + formatDate() + '</div> </div> </div> </div> </div>';
                     $("#minRsiLog").prepend(minRsi);
                     minRsi = '';
                 }
-
-                //
-                /*
-                var logs = '<div class="preview-item border-bottom flex-grow"> <div class="preview-item-content d-flex flex-grow"> <div class="flex-grow"> <div class="d-sm-flex justify-content-between"> <div class="col-4">' + data[i].symbol + '</div> <div class="col-4">' + data[i].rsi + '</div> <div class="col-4">' + data[i].getMinute + '</div> </div> </div> </div> </div>';
-                $("#totalLog").append(logs);
-                */
 
                 logs = '';
             }
@@ -173,7 +190,7 @@
         /* input type = "hidden" 에 value값으로 default(초기 정지상태, 실행중) / stop(중지 누른 순간 체크) / pause(사용자가 중지 누름) 기록 */
 
         // RSI 로그 데이터 요청
-        function getRsiLog(minute, currentDate, coinLimit){
+        function getRsiLog(minute, currentDate){
             logReq = $.ajax({
                 url : "http://3.37.247.174:8080/getRsiLog.do",
                 type : "post",
@@ -181,8 +198,7 @@
                 data : {
                     "userId" : <%=ss_user_id%>,
                     "minute" : minute,
-                    "currentDate" : currentDate,
-                    "coinCnt" : coinLimit
+                    "currentDate" : currentDate
                 },
                 success: function (data) {
                     console.log(JSON.stringify(data))
@@ -193,18 +209,18 @@
         }
 
         // RSI 로그 10초마다 요청
-        function reqTimeLog(minute, currentDate, coinLimit){
+        function reqTimeLog(minute, currentDate){
             var repeat = setInterval(function() {
                 console.log("현재상태 : " + document.getElementById("isstop").value);
                 /* 중지를 눌렀다면(value=stop) setInterval 종료 */
                 if (document.getElementById("isstop").value === "stop") {
-                    // 정지를 요청했다면 pause(중지) 상태로 변경하여 setInterval 중지 + elif 문에 해당하지 않으므로 ajax 요청 중지
+// 정지를 요청했다면 pause(중지) 상태로 변경하여 setInterval 중지 + elif 문에 해당하지 않으므로 ajax 요청 중지
                     document.getElementById("isstop").value = "pause";
 
-                    // else (실행 버튼 누르고 실행중일 때 - value (Default는 초기 정지상태, 실행중일때)
+// else (실행 버튼 누르고 실행중일 때 - value (Default는 초기 정지상태, 실행중일때)
                 } else if (document.getElementById("isstop").value === "default") {
-                    // 실행 중인 경우 6초에 한번씩 Log 요청
-                    getRsiLog(minute, currentDate, coinLimit)
+// 실행 중인 경우 6초에 한번씩 Log 요청
+                    getRsiLog(minute, currentDate)
                 } else { // pause이면(stop을 눌러 정지상태 : clearInterval에 pause 상태 지정으로 더이상 함수 요청하지 않음)
                     console.log("pause 상태! : " + document.getElementById("isstop").value);
                     clearInterval(repeat);
@@ -218,7 +234,7 @@
         // 내가 클릭한 시점으로 데이터저장
         function rsiPlay(){
 
-            // 재시작 할 경우에 stopCheck의 value가 default가 아닌 pause일 수 있으므로, 초기 정지상태 또는 실행중인 상태를 표시하는 default로 초기화
+// 재시작 할 경우에 stopCheck의 value가 default가 아닌 pause일 수 있으므로, 초기 정지상태 또는 실행중인 상태를 표시하는 default로 초기화
             document.getElementById("isstop").value = "default";
 
             let obj_length = document.getElementsByName("coin").length;
@@ -237,7 +253,7 @@
                 let currentDate = getCurrentDate();
                 console.log("currentData : " + currentDate)
                 let minute = $("#unit-select option:selected").val();
-                reqTimeLog(minute, currentDate, obj_length)
+                reqTimeLog(minute, currentDate)
 
                 console.log(coinList[0]);
                 console.log(minute)
@@ -285,6 +301,64 @@
             document.getElementById("isstop").value = "stop";
         }
 
+        // 크롤링한 코인 뉴스 가져오기
+        function getCryptoNewsList() {
+            console.log("getCryptoNewsList start!");
+
+            $.ajax({
+                url : "/getCryptoNewsList.do",
+                type : "post",
+                dataType : "json",
+                success : function(data) {
+                    console.log("크롤링 데이터 : " + JSON.stringify(data));
+// 불러온 뉴스 내용 기록
+                    writeNews(data);
+                }
+            })
+        }
+
+        // 가져온 뉴스 내용을 뉴스란에 보여주기
+        function writeNews(data) {
+            console.log("write News Start!");
+
+            for (var i=0; i<data.length; i++) {
+
+// 뉴스 제목과 내용이 긴 경우(특정 길이 초과 시) 제목 .... 으로 생략하여 표기(substring)
+                var newsTitle = data[i].title;
+                var newsContent = data[i].content;
+
+                if (newsTitle.length > 33) {
+                    newsTitle = newsTitle.substring(0, 33) + '...';
+                }
+
+                if (newsContent.length > 55) {
+                    newsContent = newsContent.substring(0, 55) + '...';
+                }
+
+// data[i].url (링크 주소) a href="data[i].url" append 필요 (서버 올라오면 진행 예정)
+                var newsData = '<tr class="row"> <td class="col-4 flex-grow overflow-hidden"><a class="aTagTitle" href="' + data[i].link + '"> ' + newsTitle + '</a></td> <td class="col-7 flex-grow overflow-hidden"><a class="aTagContent" href="' + data[i].link + '">' + newsContent + '</a></td> <td class="col-1 flex-grow overflow-hidden text-center">' + formatNewsDate(data[i].date) + '</td> </tr>';
+
+// 오피니언 마이닝을 통해 호재뉴스 & 악재뉴스 분리
+// 호재뉴스인 경우(0 이상) - 진행 예정
+                if (Number(data[i].point) > 0) {
+
+                    var goodNewsData = ' <div class="preview-item border-bottom pt-1 pb-1"> <div class="preview-item-content d-flex flex-grow"> <div class="flex-grow"> <div class="d-sm-flex justify-content-between"> <h6 class="preview-subject"><a class="aTagTitle" href="' + data[i].link + '">' + newsTitle + '</a></h6> <div class="d-flex"> <p class="text-small text-muted border-right pr-3 pt-1">' + formatNewsDate(data[i].date) + '</p> </div> </div> <p><a class="aTagContent" href="' + data[i].link + '">' + newsContent + '</a></p> </div> </div> </div>';
+                    $("#goodNews").append(goodNewsData);
+                    goodNewsData = '';
+                }
+
+// 악재뉴스인 경우(0 이하) - 진행 예정
+                else if (Number(data[i].point) < 0) {
+
+                    var badNewsData = ' <div class="preview-item border-bottom pt-1 pb-1"> <div class="preview-item-content d-flex flex-grow"> <div class="flex-grow"> <div class="d-sm-flex justify-content-between"> <h6 class="preview-subject"><a class="aTagTitle" href="' + data[i].link + '">' + newsTitle + '</a></h6> <div class="d-flex"> <p class="text-small text-muted border-right pr-3 pt-1">' + formatNewsDate(data[i].date) + '</p> </div> </div> <p><a class="aTagContent" href="' + data[i].link + '">' + newsContent + '</a></p> </div> </div> </div>';
+                    $("#badNews").append(badNewsData);
+                    badNewsData = '';
+                }
+
+                $("#newsList").append(newsData);
+                newsData = '';
+            }
+        }
     </script>
 
 </head>
@@ -295,8 +369,8 @@
         <nav class="navbar top-navbar col-lg-12 col-12 p-3">
             <div class="container">
                 <div class="text-center navbar-brand-wrapper d-flex align-items-center justify-content-center">
-                    <a class="navbar-brand brand-logo mr-2" href="/">Crypto Signal</a>
-                    <a class="navbar-brand brand-logo-mini" href="/loginPage.do">Crypto Signal</a>
+                    <a class="navbar-brand brand-logo mr-2 font-weight-bold mainLogo" href="/">Crypto Signal</a>
+                    <a class="navbar-brand brand-logo-mini font-weight-bold mainLogo" href="/loginPage.do">Crypto Signal</a>
                 </div>
                 <div class="navbar-menu-wrapper d-flex align-items-center justify-content-end">
                     <ul class="navbar-nav w-100">
@@ -311,15 +385,15 @@
                         <li class="nav-item dropdown border-left">
                             <a class="nav-link count-indicator dropdown-toggle" id="notificationDropdown" href="#" data-toggle="dropdown">
                                 <% if (SS_USER_NAME == null) { %>
-                                <div class="users mr-2" style="width: 150px;" onclick="location.href='/loginPage.do'">로그인 후 이용하세요
+                                <div class="users mr-3" style="width: 150px; font-size: 20px;" onclick="location.href='/loginPage.do'">로그인 후 이용하세요
                                 </div>
                             </a>
                         </li>
 
                         <!-- 세션이 있는 경우(=로그인 상태인 경우) -->
                         <% } else { %>
-                        <div class="users mr-2" style="width: 150px;"><%=SS_USER_NAME%>님 환영합니다!</div>
-                        <div class="users" onclick="location.href='/logout.do'" style="width: 50px;">로그아웃</div>
+                        <div class="users mr-3 font" style="width: 150px; font-size: 20px;"><%=SS_USER_NAME%>님 환영합니다!</div>
+                        <div class="users font yellow" onclick="location.href='/logout.do'" style="width: 50px; font-size: 20px;">로그아웃</div>
                         <% } %>
                         </a>
 
@@ -349,57 +423,54 @@
                     <div class="col-md-4 grid-margin stretch-card">
                         <div class="card">
                             <div class="card-body">
-                                <h4 class="card-title text-center">상대강도지수 RSI 알림</h4>
+                                <h4 class="card-title text-center mt-2 mb-4">상대강도지수 RSI 알림</h4>
                                 <div class="row my-4">
                                     <div class="col-lg-7 mx-auto text-center">
 
                                         <!-- RSI 알림 실행/중지 버튼 -->
-                                        <button type="button" id="rsiexecute" class="btn btn-success btn-fw fa-play mb-2" onclick="loginChk()">실행</button>
-                                        <button type="button" id="rsistop" class="btn btn-warning btn-fw fa-play mb-2" onclick="rsiStop()" style="display: none;">중지</button>
+                                        <button type="button" id="rsiexecute" class="btn btn-success btn-fw fa-play mb-2 font-weight-bold buttonSize font" style="background-color: #d0a7e4; color: purple;" onclick="loginChk()">실행</button>
+                                        <button type="button" id="rsistop" class="btn btn-warning btn-fw fa-play mb-2 font-weight-bold buttonSize font" onclick="rsiStop()" style="display: none; ">중지</button>
 
                                         <input type="hidden" id="isstop" value="default"/>
 
                                         <!-- RSI 알림 받을 분봉 선택 -->
-                                        <select class="dropdown-header bg-primary rounded-bottom rounded-top m-auto" id="unit-select">
-                                            <option class="dropdown-item" value="" selected hidden>분봉 선택</option>
-                                            <option class="dropdown-item" value="1">1분봉</option>
-                                            <option class="dropdown-item" value="3">3분봉</option>
-                                            <option class="dropdown-item" value="5">5분봉</option>
-                                            <option class="dropdown-item" value="10">10분봉</option>
-                                            <option class="dropdown-item" value="15">15분봉</option>
-                                            <option class="dropdown-item" value="30">30분봉</option>
-                                            <option class="dropdown-item" value="60">60분봉</option>
-                                            <option class="dropdown-item" value="240">240분봉</option>
+                                        <select class="dropdown-header rounded-bottom rounded-top font-weight-bold ml-auto mr-auto mt-3 buttonSize minuteSelect font" id="unit-select">
+                                            <option class="dropdown-item text-black font-weight-bold font" value="" selected hidden>분봉 선택</option>
+                                            <option class="dropdown-item text-black font-weight-bold" value="1">1분봉</option>
+                                            <option class="dropdown-item text-black font-weight-bold" value="3">3분봉</option>
+                                            <option class="dropdown-item text-black font-weight-bold" value="5">5분봉</option>
+                                            <option class="dropdown-item text-black font-weight-bold" value="10">10분봉</option>
+                                            <option class="dropdown-item text-black font-weight-bold" value="15">15분봉</option>
+                                            <option class="dropdown-item text-black font-weight-bold" value="30">30분봉</option>
+                                            <option class="dropdown-item text-black font-weight-bold" value="60">60분봉</option>
+                                            <option class="dropdown-item text-black font-weight-bold" value="240">240분봉</option>
                                         </select>
                                         <br/>
 
-                                        <!-- window javascript 알림 테스트 버튼(현재 setTimeout 5초) -->
-                                        <button class="btn btn-behance" onclick="notify()">알림 테스트</button>
-                                        <button class="btn btn-behance" onclick="getRsiLog()">데이터 GET 테스트</button>
                                     </div>
                                 </div>
+
+
+
+
+                                <div class="row mt-3">
+                                    <div class="col-12 d-flex flex-row py-3 px-4 rounded">
+                                        <img src="/resource/assets/images/doge.png" class="container-fluid rounded-pill" style="box-shadow: 0 0 15px 10px #141414;">
+                                        <br/>
+                                    </div>
+                                </div>
+
+
                                 <div class="row mt-3">
                                     <div class="col-12 bg-gray-dark d-flex flex-row py-3 px-4 rounded justify-content-between">
                                         <div>
-                                            <h6 class="mb-1">Transfer to stripe</h6>
-                                            <p class="card-text">Dec 25, 2018</p>
-                                        </div>
-                                        <div class="align-self-center">
-                                            <h6 class="font-weight-bold mb-0">650$</h6>
+                                            <h6><span class="yellow d-inline-block fontNoto">RSI 30</span>은 패닉셀로 떨어지는 코인 가격을 알려주는 지표입니다.</h6>
+                                            <p class="card-text fontNoto" style="color: lightpink">※ 투자에 대한 책임은 본인에게 있습니다.</p>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="row mt-3">
-                                    <div class="col-12 bg-gray-dark d-flex flex-row py-3 px-4 rounded">
-                                        <div>
-                                            <h6 class="mb-1">Transfer to Paypal</h6>
-                                            <p class="card-text">Dec 31, 2018</p>
-                                        </div>
-                                        <div class="align-self-center flex-grow text-right">
-                                            <h6 class="font-weight-bold mb-0">530$</h6>
-                                        </div>
-                                    </div>
-                                </div>
+
+
                             </div>
                         </div>
                     </div>
@@ -413,7 +484,7 @@
                                         <h4 class="card-title">Coin List</h4>
                                     </div>
                                 </div>
-                                <div class="row" id="coinList" style="height: 450px; overflow: auto;">
+                                <div class="row overflow-auto" id="coinList" style="height: 450px;">
                                     <div class="col-12">
                                         <div class="preview-list">
 
@@ -1052,9 +1123,9 @@
                             <div class="card-body">
                                 <h4 class="card-title mb-0">로그 기록 <i class="icon-md mdi mdi-chart-pie text-primary"></i></h4>
                                 <div class="preview-list">
-                                    <div class="d-flex flex-row p-3" style="overflow:auto;">
+                                    <div class="d-flex flex-row p-3 overflow-auto">
 
-                                        <div id="logList" class="preview-item border-bottom flex-grow" style="max-height: 200px; overflow: auto;">
+                                        <div id="logList" class="preview-item border-bottom flex-grow overflow-auto" style="max-height: 200px;">
                                             <div class="preview-item-content d-flex flex-grow">
                                                 <div id="totalLog" class="flex-grow">
 
@@ -1075,8 +1146,8 @@
                             <div class="card-body">
                                 <h4 class="card-title border-bottom mb-0 ml-2 pb-2">과매도 RSI 30</h4>
                                 <div class="preview-list">
-                                    <div class="d-flex flex-row p-3" style="overflow:auto;">
-                                        <div id="minList" class="preview-item flex-grow" style="max-height: 200px; overflow: auto;">
+                                    <div class="d-flex flex-row p-3 overflow-auto">
+                                        <div id="minList" class="preview-item flex-grow overflow-auto" style="max-height: 200px;">
                                             <div class="preview-item-content d-flex flex-grow">
 
                                                 <!-- RSI가 30 이하인 코인 정보를 계속 prepend -->
@@ -1098,7 +1169,7 @@
                             <div class="card-body">
                                 <h4 class="card-title border-bottom mb-0 ml-2 pb-2">과매수 RSI 70</h4>
                                 <div class="preview-list">
-                                    <div class="d-flex flex-row p-3" style="overflow:auto;">
+                                    <div class="d-flex flex-row p-3 overflow-auto">
                                         <div id="maxList" class="preview-item flex-grow" style="max-height: 200px; overflow: auto;">
                                             <div class="preview-item-content d-flex flex-grow">
 
@@ -1124,22 +1195,20 @@
                                 <h4 class="card-title">코인 종합 뉴스</h4>
 
                                 <!-- table 형태로 뉴스 목록 불러오기 -->
-                                <div class="table-responsive">
+                                <div class="table-responsive overflow-auto" id="newsListRow" style="max-height: 300px;">
                                     <table class="table">
                                         <thead>
-                                        <tr>
+                                        <tr class="row">
                                             <!-- column 기록 -->
-                                            <th> 뉴스 제목 </th>
-                                            <th> 뉴스 내용 </th>
-                                            <th> 날짜 </th>
+                                            <th class="col-4 text-lg-center"> News 제목 </th>
+                                            <th class="col-7 text-lg-center"> News 내용 </th>
+                                            <th class="col-1 text-lg-center"> 날짜 </th>
                                         </tr>
                                         </thead>
-                                        <tbody>
-                                        <tr>
-                                            <td> David Grey </td>
-                                            <td> davidgrey@demo.com </td>
-                                            <td> 01/11/2017 </td>
-                                        </tr>
+
+                                        <!-- 크롤링한 뉴스 내용을 기록 -->
+                                        <tbody id="newsList">
+
                                         </tbody>
                                     </table>
                                 </div>
@@ -1154,23 +1223,20 @@
                         <div class="card">
                             <div class="card-body">
                                 <h4 class="card-title">호재 News</h4>
+
                                 <div class="preview-list">
-                                    <div class="preview-item border-bottom">
-                                        <div class="preview-thumbnail">
-                                            <img src="/resource/assets/images/faces/face6.jpg" alt="image" class="rounded-circle" />
-                                        </div>
+
+                                    <div id="goodNewsList" class="preview-item flex-grow overflow-auto" style="max-height: 150px;">
                                         <div class="preview-item-content d-flex flex-grow">
-                                            <div class="flex-grow">
-                                                <div class="d-sm-flex justify-content-between">
-                                                    <h6 class="preview-subject">Richard Joy</h6>
-                                                    <div class="d-flex">
-                                                        <p class="text-small text-muted border-right pr-3">13.06.2017</p>
-                                                    </div>
-                                                </div>
-                                                <p>Well, it seems to be working now. Thank You !</p>
+
+                                            <!-- 오피니언 마이닝을 통한 호재 뉴스를 append -->
+                                            <div id="goodNews" class="flex-grow">
+
                                             </div>
                                         </div>
                                     </div>
+
+
                                 </div>
                             </div>
                         </div>
@@ -1182,23 +1248,20 @@
                         <div class="card">
                             <div class="card-body">
                                 <h4 class="card-title">악재 News</h4>
+
                                 <div class="preview-list">
-                                    <div class="preview-item border-bottom">
-                                        <div class="preview-thumbnail">
-                                            <img src="/resource/assets/images/faces/face6.jpg" alt="image" class="rounded-circle" />
-                                        </div>
+
+                                    <div id="badNewsList" class="preview-item flex-grow overflow-auto" style="max-height: 150px;">
                                         <div class="preview-item-content d-flex flex-grow">
-                                            <div class="flex-grow">
-                                                <div class="d-sm-flex justify-content-between">
-                                                    <h6 class="preview-subject">Richard Joy</h6>
-                                                    <div class="d-flex">
-                                                        <p class="text-small text-muted border-right pr-3">13.06.2017</p>
-                                                    </div>
-                                                </div>
-                                                <p>Well, it seems to be working now. Thank You !</p>
+
+                                            <!-- 오피니언 마이닝을 통한 악재 뉴스를 append -->
+                                            <div id="badNews" class="flex-grow">
+
                                             </div>
                                         </div>
                                     </div>
+
+
                                 </div>
                             </div>
                         </div>
@@ -1224,6 +1287,7 @@
 </div>
 
 <style>
+    /* overflow-auto(overflow 시 scroll 생성)에 대한 스크롤바를 보이지 않게 지정 */
     #coinList::-webkit-scrollbar {
         display: none;
     }
@@ -1240,10 +1304,106 @@
         display: none;
     }
 
+    #newsListRow::-webkit-scrollbar {
+        display: none;
+    }
+
+    #goodNewsList::-webkit-scrollbar {
+        display: none;
+    }
+
+    #badNewsList::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* 실행버튼에 대한 스타일 지정 */
+    #rsiexecute {
+        border: 1px solid #d0a7e4;
+        font-family: 'Do Hyeon';
+    }
+
+    /* font color yellow */
     .yellow {
         color: yellow;
     }
 
+    /* 실행, 중지 버튼 등 버튼 공동 사이즈 지정*/
+    .buttonSize {
+        width: 150px;
+        height: 36px;
+    }
+
+    /* dropdown(분봉 선택) */
+    #unit-select {
+        background-color: lightskyblue;
+        border-style: none;
+        color: black;
+    }
+
+    /* 코인 관련 뉴스(제목/내용) 클릭 시 해당 뉴스기사 홈페이지로 이동하는 a태그 스타일 지정
+    .aTagContent (뉴스 내용에 대한 스타일 지정)
+    .aTagTitle (뉴스 제목에 대한 스타일 지정)
+    */
+    .aTagContent {
+        color: white;
+    }
+
+    .aTagContent:hover {
+        text-decoration: none;
+        color: yellow;
+    }
+
+    .aTagTitle {
+        color: lightblue;
+    }
+
+    .aTagTitle:hover {
+        text-decoration: none;
+        color: lightskyblue;
+    }
+
+    /* coinList 체크박스에 대한 hover(Cursor) 지정 */
+    .input-helper:hover {
+        cursor: pointer;
+    }
+
+    .minuteSelect:hover {
+        cursor: pointer;
+    }
+
+    /* 사용자 폰트 지정 */
+    .font {
+        font-family: 'Do Hyeon';
+        font-size: 16px;
+    }
+
+    /* font - Noto Sans KR */
+    .fontNoto {
+        font-family: 'Noto Sans KR';
+    }
+
+    /* 메인 로고 main Logo(Crypto Signal) CSS */
+    .mainLogo {
+        font-family: 'Do Hyeon';
+        color: antiquewhite;
+        /* text-shadow:white 1px 1px 1px; */
+        font-size: 32px;
+    }
+
+    .mainLogo:hover {
+        text-decoration: none;
+        color: antiquewhite;
+    }
+
+    @font-face {
+        font-family: 'Do Hyeon';
+        src: url('https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Noto+Sans+KR:wght@500&display=swap')
+    }
+
+    @font-face {
+        font-family: 'Noto Sans KR';
+        src: url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR&display=swap')
+    }
 </style>
 <!-- container-scroller -->
 <!-- plugins:js -->

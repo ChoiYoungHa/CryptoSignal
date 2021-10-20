@@ -243,7 +243,7 @@
 
                 /* RSI를 수집하기 위한 ajax 요청 */
                 req = $.ajax({
-                    url: "http://192.168.25.33:5000/rsiAram",
+                    url: "http://3.37.247.174:5000/rsiAram",
                     type: "post",
                     dataType: "list",
                     data: {

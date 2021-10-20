@@ -1072,10 +1072,10 @@
                     <div class="col-md-6 grid-margin stretch-card">
                         <div class="card">
                             <div class="card-body">
-                                <h4 class="card-title  mb-0 ml-2">과매도 RSI 30</h4>
+                                <h4 class="card-title border-bottom mb-0 ml-2 pb-2">과매도 RSI 30</h4>
                                 <div class="preview-list">
                                     <div class="d-flex flex-row p-3" style="overflow:auto;">
-                                        <div id="minList" class="preview-item border-bottom flex-grow" style="max-height: 200px; overflow: auto;">
+                                        <div id="minList" class="preview-item flex-grow" style="max-height: 200px; overflow: auto;">
                                             <div class="preview-item-content d-flex flex-grow">
 
                                                 <!-- RSI가 30 이하인 코인 정보를 계속 prepend -->
@@ -1095,10 +1095,10 @@
                     <div class="col-md-6 grid-margin stretch-card">
                         <div class="card">
                             <div class="card-body">
-                                <h4 class="card-title mb-0 ml-2">과매수 RSI 70</h4>
+                                <h4 class="card-title border-bottom mb-0 ml-2 pb-2">과매수 RSI 70</h4>
                                 <div class="preview-list">
                                     <div class="d-flex flex-row p-3" style="overflow:auto;">
-                                        <div id="maxList" class="preview-item border-bottom flex-grow" style="max-height: 200px; overflow: auto;">
+                                        <div id="maxList" class="preview-item flex-grow" style="max-height: 200px; overflow: auto;">
                                             <div class="preview-item-content d-flex flex-grow">
 
                                                 <!-- RSI가 70 이상인 코인 정보를 계속 prepend -->

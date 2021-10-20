@@ -22,4 +22,7 @@ public interface IMongoService {
     // Crawling 데이터 저장
     public int insertCrawler() throws Exception;
 
+    // CryptoNews 가져오기
+    public List<Map<String, String>> getCryptoNews() throws Exception;
+
 }

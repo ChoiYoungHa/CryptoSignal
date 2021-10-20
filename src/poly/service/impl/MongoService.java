@@ -59,7 +59,7 @@ public class MongoService implements IMongoService {
         Document doc = null;
 
         // 10페이지 링크주소가 담길 파일객체 생성
-        FileWriter fw = new FileWriter("D:\\Project\\CryptoSignal\\etc\\coinReaders.txt");
+        FileWriter fw = new FileWriter("C:\\project\\CryptoSignal\\etc\\coinReaders.txt");
         BufferedWriter bw = new BufferedWriter(fw);
 
         // 10페이지 Document 객체 요청
@@ -77,7 +77,7 @@ public class MongoService implements IMongoService {
         }
 
         // 링크주소를 불러옴
-        FileReader rw = new FileReader("D:\\Project\\CryptoSignal\\etc\\coinReaders.txt");
+        FileReader rw = new FileReader("C:\\project\\CryptoSignal\\etc\\coinReaders.txt");
         BufferedReader br = new BufferedReader(rw);
 
         String readLine = null;
@@ -114,6 +114,8 @@ public class MongoService implements IMongoService {
         return mongoMapper.insertCrawler(pList);
     }
 
-
-
+    @Override
+    public List<Map<String, String>> getCryptoNews() throws Exception {
+        return mongoMapper.getCryptoNews();
+    }
 }

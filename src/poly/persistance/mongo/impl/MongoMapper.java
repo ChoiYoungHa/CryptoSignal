@@ -10,6 +10,7 @@ import com.mongodb.client.MongoCursor;
 import com.mongodb.client.result.DeleteResult;
 import config.Mapper;
 import org.apache.log4j.Logger;
+
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -184,49 +185,62 @@ public class MongoMapper extends AbstractMongoDBComon implements IMongoMapper {
 
     // 몽고디비 news 데이터 요청
     @Override
-    public LinkedList<Map<String, String>> getCryptoNews() throws Exception {
+    public List<Map<String, String>> getCryptoNews() throws Exception {
         log.info(this.getClass().getName() + "getCryptoNews Start!");
 
-        LinkedList<Map<String, String>> rList = new LinkedList<Map<String, String>>();
+        List<Map<String, String>> rList = new LinkedList<Map<String, String>>();
 
         String colNm = "Crawler";
 
         MongoCollection<Document> col = mongodb.getCollection(colNm);
+
+      //  MongoCursor<Document> cursor = col.find().iterator();
         FindIterable<Document> rs = col.find();
-
         Iterator<Document> cursor = rs.iterator();
+        log.info("cursor 까지");
 
-        while (cursor.hasNext()) {
-            Document doc = cursor.next();
-
-            if (doc == null) {
-                doc = new Document();
-            }
-
-            String title = CmmUtil.nvl(doc.getString("title"));
-            String content = CmmUtil.nvl(doc.getString("content"));
-            String date = CmmUtil.nvl(doc.getString("date"));
-            String point = CmmUtil.nvl(doc.getString("point"));
-
-            log.info("title : " + title);
-            log.info("content : " + content);
-            log.info("date : " + date);
-            log.info("point : " + point);
-
-            Map<String, String> rMap = new LinkedHashMap<String, String>();
-
-            rMap.put("title", title);
-            rMap.put("content", content);
-            rMap.put("date", date);
-            rMap.put("point", point);
-            rList.add(rMap);
-
-            rMap = null;
-            doc = null;
+        if (cursor == null) {
+            log.info("cursor is null");
         }
 
+        log.info("iterator 시작");
+        try{
+            while (cursor.hasNext()) {
+                Document doc = cursor.next();
+
+                if (doc == null) {
+                    doc = new Document();
+                }
+
+                log.info("데이터 받기 시작!");
+                String title = CmmUtil.nvl(doc.getString("title"));
+                log.info("title : " + title);
+                String content = CmmUtil.nvl(doc.getString("content"));
+                log.info("content : " + content);
+                String date = CmmUtil.nvl(doc.getString("date"));
+                log.info("date : " + date);
+                String point = Integer.toString(doc.getInteger("point"));
+                log.info("point : " + point);
+                log.info("데이터 받기 끝!");
+
+
+                Map<String, String> rMap = new HashMap<String, String>();
+
+                rMap.put("title", title);
+                rMap.put("content", content);
+                rMap.put("date", date);
+                rMap.put("point", point);
+                rList.add(rMap);
+
+                rMap = null;
+                doc = null;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
         cursor = null;
-        rs = null;
         col = null;
 
         log.info(this.getClass().getName() + "getRsiLog End!");

@@ -29,8 +29,8 @@ public interface IMongoMapper {
     // Crawling 데이터 저장
     public int insertCrawler(List<Map<String, Object>> pList) throws Exception;
 
-    // CryptoNews 가져오기
-    public LinkedList<Map<String, String>> getCryptoNews() throws Exception;
+    // mongoDB news 데이터 가져오기
+    public List<Map<String, String>> getCryptoNews() throws Exception;
 
     // 뉴스 컬렉션 삭제
     public int deleteNewsInfo() throws Exception;

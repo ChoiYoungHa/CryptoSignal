@@ -173,7 +173,7 @@
         /* input type = "hidden" 에 value값으로 default(초기 정지상태, 실행중) / stop(중지 누른 순간 체크) / pause(사용자가 중지 누름) 기록 */
 
         // RSI 로그 데이터 요청
-        function getRsiLog(minute, currentDate){
+        function getRsiLog(minute, currentDate, coinLimit){
             logReq = $.ajax({
                 url : "http://3.37.247.174:8080/getRsiLog.do",
                 type : "post",
@@ -181,7 +181,8 @@
                 data : {
                     "userId" : <%=ss_user_id%>,
                     "minute" : minute,
-                    "currentDate" : currentDate
+                    "currentDate" : currentDate,
+                    "coinCnt" : coinLimit
                 },
                 success: function (data) {
                     console.log(JSON.stringify(data))
@@ -192,7 +193,7 @@
         }
 
         // RSI 로그 10초마다 요청
-        function reqTimeLog(minute, currentDate){
+        function reqTimeLog(minute, currentDate, coinLimit){
             var repeat = setInterval(function() {
                 console.log("현재상태 : " + document.getElementById("isstop").value);
                 /* 중지를 눌렀다면(value=stop) setInterval 종료 */
@@ -203,7 +204,7 @@
                     // else (실행 버튼 누르고 실행중일 때 - value (Default는 초기 정지상태, 실행중일때)
                 } else if (document.getElementById("isstop").value === "default") {
                     // 실행 중인 경우 6초에 한번씩 Log 요청
-                    getRsiLog(minute, currentDate)
+                    getRsiLog(minute, currentDate, coinLimit)
                 } else { // pause이면(stop을 눌러 정지상태 : clearInterval에 pause 상태 지정으로 더이상 함수 요청하지 않음)
                     console.log("pause 상태! : " + document.getElementById("isstop").value);
                     clearInterval(repeat);
@@ -236,7 +237,7 @@
                 let currentDate = getCurrentDate();
                 console.log("currentData : " + currentDate)
                 let minute = $("#unit-select option:selected").val();
-                reqTimeLog(minute, currentDate)
+                reqTimeLog(minute, currentDate, obj_length)
 
                 console.log(coinList[0]);
                 console.log(minute)
@@ -250,8 +251,7 @@
                         "coinList": coinList,
                         "minute": minute,
                         "userId": <%=ss_user_id%>,
-                        "collectTime": currentDate,
-                        "coinCnt" : obj_length
+                        "collectTime": currentDate
                     }
                 })
 

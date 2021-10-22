@@ -8,12 +8,11 @@ import poly.persistance.mongo.IMongoMapper;
 import poly.service.IMongoService;
 
 import javax.annotation.Resource;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.*;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.regex.Matcher;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -58,8 +57,13 @@ public class MongoService implements IMongoService {
 
         Document doc = null;
 
+        String testPath = "/crawlData/coinReaders.txt";
+        String OsFilePath = testPath.replaceAll("/", Matcher.quoteReplacement(File.separator));
+        String reverseSlashPath = OsFilePath.replaceAll(Matcher.quoteReplacement(File.separator), "/");
+
+
         // 10페이지 링크주소가 담길 파일객체 생성
-        FileWriter fw = new FileWriter("/crawlData\\coinReaders");
+        FileWriter fw = new FileWriter(reverseSlashPath);
         BufferedWriter bw = new BufferedWriter(fw);
 
         // 10페이지 Document 객체 요청
@@ -77,7 +81,8 @@ public class MongoService implements IMongoService {
         }
 
         // 링크주소를 불러옴
-        FileReader rw = new FileReader("/crawlData\\coinReaders");
+        FileReader rw = new FileReader(reverseSlashPath);
+
         BufferedReader br = new BufferedReader(rw);
 
         String readLine = null;
